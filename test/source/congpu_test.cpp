@@ -4,6 +4,6 @@
 
 TEST_CASE("Name is congpu", "[library]")
 {
-  auto const lib = library {};
-  REQUIRE(lib.name == "congpu");
+    auto const lib = library {};
+    REQUIRE(lib.name == "congpu");
 }
