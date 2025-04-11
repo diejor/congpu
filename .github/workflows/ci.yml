@@ -66,6 +66,7 @@ jobs:
         key: conan-coverage-${{ hashFiles('conan*.[pl][yo]*') }}
 
     - name: Install dependencies
+      run: chmod +x .github/scripts/conan-ci-setup.sh
       run: .github/scripts/conan-ci-setup.sh
 
     - name: Configure
@@ -113,6 +114,7 @@ jobs:
         key: conan-sanitize-${{ hashFiles('conan*.[pl][yo]*') }}
 
     - name: Install dependencies
+      run: chmod +x .github/scripts/conan-ci-setup.sh
       run: .github/scripts/conan-ci-setup.sh
 
     - name: Configure
@@ -175,6 +177,7 @@ jobs:
         key: conan-${{ matrix.os }}-${{ hashFiles('conan*.[pl][yo]*') }}
 
     - name: Install dependencies
+      run: chmod +x .github/scripts/conan-ci-setup.sh
       run: .github/scripts/conan-ci-setup.sh
 
     - name: Setup MultiToolTask
