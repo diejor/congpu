@@ -66,8 +66,9 @@ jobs:
         key: conan-coverage-${{ hashFiles('conan*.[pl][yo]*') }}
 
     - name: Install dependencies
-      run: chmod +x .github/scripts/conan-ci-setup.sh
-      run: .github/scripts/conan-ci-setup.sh
+      run: |
+        chmod +x .github/scripts/conan-ci-setup.sh
+        .github/scripts/conan-ci-setup.sh
 
     - name: Configure
       run: cmake --preset=ci-coverage
@@ -114,8 +115,9 @@ jobs:
         key: conan-sanitize-${{ hashFiles('conan*.[pl][yo]*') }}
 
     - name: Install dependencies
-      run: chmod +x .github/scripts/conan-ci-setup.sh
-      run: .github/scripts/conan-ci-setup.sh
+      run: |
+        chmod +x .github/scripts/conan-ci-setup.sh
+        .github/scripts/conan-ci-setup.sh
 
     - name: Configure
       run: cmake --preset=ci-sanitize
@@ -177,8 +179,9 @@ jobs:
         key: conan-${{ matrix.os }}-${{ hashFiles('conan*.[pl][yo]*') }}
 
     - name: Install dependencies
-      run: chmod +x .github/scripts/conan-ci-setup.sh
-      run: .github/scripts/conan-ci-setup.sh
+      run: |
+        chmod +x .github/scripts/conan-ci-setup.sh
+        .github/scripts/conan-ci-setup.sh
 
     - name: Setup MultiToolTask
       if: matrix.os == 'windows-2022'
