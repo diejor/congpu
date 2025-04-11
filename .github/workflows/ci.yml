@@ -48,6 +48,11 @@ jobs:
       run: sudo apt-get update -q
         && sudo apt-get install lcov -q -y
 
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -q
+        && sudo apt-get install libx11-dev libxrandr-dev libxi-dev
+
     - name: Install Python
       uses: actions/setup-python@v5
       with: { python-version: "3.12" }
@@ -93,7 +98,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update -q
-        sudo apt-get install libx11-dev libxext-dev libxrender-dev
+        && sudo apt-get install libx11-dev libxrandr-dev libxi-dev
 
     - name: Install Python
       uses: actions/setup-python@v5
