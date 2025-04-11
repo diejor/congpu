@@ -49,6 +49,11 @@ jobs:
         sudo apt-get update -q
         sudo apt-get install lcov -q -y
 
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install libx11-dev libxrandr-dev libxi-dev libxrender-dev libxkbcommon-dev xorg-dev
+
     - name: Install Python
       uses: actions/setup-python@v5
       with: { python-version: "3.12" }
@@ -63,7 +68,7 @@ jobs:
       run: bash < .github/scripts/conan-ci-setup.sh
 
     - name: Configure
-      run: cmake --preset=ci-coverage -DDAWN_USE_X11=OFF -DUSE_X11=OFF -DDAWN_USE_GLFW=OFF
+      run: cmake --preset=ci-coverage
 
     - name: Build
       run: cmake --build build/coverage -j 2
@@ -91,6 +96,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install libx11-dev libxrandr-dev libxi-dev libxrender-dev libxkbcommon-dev xorg-dev
+
     - name: Install Python
       uses: actions/setup-python@v5
       with: { python-version: "3.12" }
@@ -105,7 +115,7 @@ jobs:
       run: bash < .github/scripts/conan-ci-setup.sh
 
     - name: Configure
-      run: cmake --preset=ci-sanitize -DDAWN_USE_X11=OFF -DUSE_X11=OFF -DDAWN_USE_GLFW=OFF
+      run: cmake --preset=ci-sanitize
 
     - name: Build
       run: cmake --build build/sanitize -j 2
@@ -139,7 +149,7 @@ jobs:
       if: matrix.os == 'ubuntu-24.04'
       run: |
         sudo apt-get update -q
-        sudo apt-get install libx11-dev libxrandr-dev libxi-dev
+        sudo apt-get install libx11-dev libxrandr-dev libxi-dev libxrender-dev libxkbcommon-dev xorg-dev
 
     - name: Install static analyzers
       if: matrix.os == 'ubuntu-24.04'
@@ -172,7 +182,7 @@ jobs:
 
     - name: Configure
       shell: pwsh
-      run: cmake "--preset=ci-$("${{ matrix.os }}".split("-")[0])" -DDAWN_USE_X11=OFF -DUSE_X11=OFF -DDAWN_USE_GLFW=OFF
+      run: cmake "--preset=ci-$("${{ matrix.os }}".split("-")[0])"
 
     - name: Build
       run: cmake --build build --config Release -j 2
