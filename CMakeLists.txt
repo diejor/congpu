@@ -18,6 +18,7 @@ include(cmake/variables.cmake)
 add_library(
     congpu_lib OBJECT
     source/lib.cpp
+    source/slang_compiler.cpp
 )
 
 target_include_directories(
@@ -29,8 +30,9 @@ target_include_directories(
 target_compile_features(congpu_lib PUBLIC cxx_std_20)
 
 find_package(fmt REQUIRED)
+find_package(slang REQUIRED)
 
-target_link_libraries(congpu_lib PRIVATE fmt::fmt)
+target_link_libraries(congpu_lib PRIVATE fmt::fmt slang::slang)
 
 # ---- Declare executable ----
 
