@@ -1,5 +1,5 @@
 # congpu
-
+[![Docs](https://diejor.github.io/congpu/favicon-dark.png)](https://diejor.github.io/congpu)
 This is the congpu project.
 
 # Building and installing
