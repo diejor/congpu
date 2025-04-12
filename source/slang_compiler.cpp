@@ -107,7 +107,8 @@ Result<ModuleInfo, Error> loadSlangModule(
     size_t depCount = static_cast<size_t>(module->getDependencyFileCount());
     std::vector<std::string> dependencyFiles(depCount);
     for (size_t i = 0; i < depCount; ++i) {
-        dependencyFiles[i] = module->getDependencyFilePath(static_cast<SlangInt32>(i));
+        dependencyFiles[i] =
+            module->getDependencyFilePath(static_cast<SlangInt32>(i));
     }
 
     // Compose the module by adding the entry points.
