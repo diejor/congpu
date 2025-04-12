@@ -1,4 +1,4 @@
-name: ci
+name: Continuous Integration
 
 on:
   push:
@@ -200,7 +200,6 @@ jobs:
       run: ctest --output-on-failure --no-tests=error -C Release -j 2
 
   docs:
-    name: docs
     needs: [sanitize, test]
 
     runs-on: ubuntu-24.04
