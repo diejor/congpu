@@ -1,5 +1,6 @@
+[![pages-build-deployment](https://github.com/diejor/congpu/actions/workflows/pages/pages-build-deployment/badge.svg)](https://diejor.github.io/congpu/)
+[![Continuous Integration](https://github.com/diejor/congpu/actions/workflows/ci.yml/badge.svg)](https://github.com/diejor/congpu/actions)
 # congpu
-[![Docs](https://diejor.github.io/congpu/favicon-dark.png)](https://diejor.github.io/congpu)
 This is the congpu project.
 
 # Building and installing
