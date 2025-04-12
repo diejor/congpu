@@ -7,11 +7,11 @@
 
 ## Code of Conduct
 
-Please see the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) document.
+Please see the [CODE OF CONDUCT](CODE_OF_CONDUCT.md) document.
 
 ## Getting started
 
-Helpful notes for developers can be found in the [`HACKING.md`](HACKING.md)
+Helpful notes for developers can be found in the [HACKING](HACKING.md)
 document.
 
 In addition to he above, if you use the presets file as instructed, then you
