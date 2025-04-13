@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>source/ directory | congpu</title>
+  <title>slang_compiler namespace | congpu</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -49,7 +49,8 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          source<span class="m-breadcrumb">/</span> <span class="m-thin">directory</span>
+          slang_compiler <span class="m-thin">namespace</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="slang__compiler_8hpp.html">&lt;source/slang_compiler.hpp&gt;</a></div>
         </h1>
         <p><span></span></p>
         <nav class="m-block m-default">
@@ -58,27 +59,64 @@
             <li>
               Reference
               <ul>
-                <li><a href="#files">Files</a></li>
+                <li><a href="#func-members">Functions</a></li>
               </ul>
             </li>
           </ul>
         </nav>
-        <section id="files">
-          <h2><a href="#files">Files</a></h2>
+        <section id="func-members">
+          <h2><a href="#func-members">Functions</a></h2>
           <dl class="m-doc">
-            <dt>file <a href="lib_8cpp.html" class="m-doc">lib.cpp</a></dt>
-            <dd><span></span></dd>
-            <dt>file <a href="lib_8hpp.html" class="m-doc">lib.hpp</a></dt>
-            <dd><span></span></dd>
-            <dt>file <a href="main_8cpp.html" class="m-doc">main.cpp</a></dt>
-            <dd><span></span></dd>
-            <dt>file <a href="result_8h.html" class="m-doc">result.h</a></dt>
-            <dd><span></span></dd>
-            <dt>file <a href="slang__compiler_8cpp.html" class="m-doc">slang_compiler.cpp</a></dt>
-            <dd><span></span></dd>
-            <dt>file <a href="slang__compiler_8hpp.html" class="m-doc">slang_compiler.hpp</a></dt>
-            <dd><span></span></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a255728e8dd57da64ef777f0fd486a573" class="m-doc">compileSlangToWgsl</a>(</span><span class="m-doc-wrap">const std::string&amp; moduleName,
+              const std::string&amp; slangSource,
+              const std::vector&lt;std::string&gt;&amp; entryPoints,
+              const std::vector&lt;std::string&gt;&amp; includeDirectories = {}) -&gt; <a href="result_8h.html#a88f3f250b07dd1e328a0dfe21f6b5315" class="m-doc">Result</a>&lt;std::string, <a href="structError.html" class="m-doc">Error</a>&gt;</span>
+            </dt>
+            <dd>Compiles a Slang module (provided as a source string) into WGSL.</dd>
           </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-doc-details" id="a255728e8dd57da64ef777f0fd486a573"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper"><a href="result_8h.html#a88f3f250b07dd1e328a0dfe21f6b5315" class="m-doc">Result</a>&lt;std::string, <a href="structError.html" class="m-doc">Error</a>&gt; slang_<wbr />compiler::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a255728e8dd57da64ef777f0fd486a573" class="m-doc-self">compileSlangToWgsl</a>(</span><span class="m-doc-wrap">const std::string&amp; moduleName,
+              const std::string&amp; slangSource,
+              const std::vector&lt;std::string&gt;&amp; entryPoints,
+              const std::vector&lt;std::string&gt;&amp; includeDirectories = {})</span></span>
+            </h3>
+            <p>Compiles a Slang module (provided as a source string) into WGSL.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">moduleName</td>
+                  <td>A name for the module (used for diagnostics).</td>
+                </tr>
+                <tr>
+                  <td>slangSource</td>
+                  <td>The complete Slang source code as a string.</td>
+                </tr>
+                <tr>
+                  <td>entryPoints</td>
+                  <td>A vector containing the entry point names to compile.</td>
+                </tr>
+                <tr>
+                  <td>includeDirectories</td>
+                  <td>An optional vector of directory paths for additional include search paths.</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th>Returns</th>
+                  <td><a href="result_8h.html#a88f3f250b07dd1e328a0dfe21f6b5315" class="m-doc">Result&lt;std::<wbr />string, Error&gt;</a> On success, returns the generated WGSL code as a string; otherwise returns an <a href="structError.html" class="m-doc">Error</a>.</td>
+                </tr>
+              </tfoot>
+            </table>
+<p>This function creates a Slang compilation session, loads the provided Slang source code, adds the given entry points, links the module, and then generates WGSL output code. All operations are performed in memory.</p>
+          </div></section>
         </section>
       </div>
     </div>
