@@ -1,35 +1,40 @@
 #pragma once
 
-#include <variant>
-#include <string>
 #include <sstream>
+#include <string>
+#include <variant>
 
 /**
  * The Result type contains either a correct value or an error.
  * This is a common design pattern to propagate errors without using
  * exceptions. It is close in spirit to rust's Result type.
  */
-template <typename Value, typename Error>
+template<typename Value, typename Error>
 using Result = std::variant<Value, Error>;
 
 /**
  * Test if a Result contains an error rather than a result value
  */
-template <typename Value, typename Error>
-bool isError(const Result<Value, Error>& result) {
-	return result.index() == 1;
+template<typename Value, typename Error>
+bool isError(const Result<Value, Error>& result)
+{
+    return result.index() == 1;
 }
 
 /**
- * A unit type, used as first argument of Result for function that return void or an error.
+ * A unit type, used as first argument of Result for function that return void
+ * or an error.
  */
-struct Void {};
+struct Void
+{
+};
 
 /**
  * A generic error type, to be used when there is no need for a specific type.
  */
-struct Error {
-	std::string message;
+struct Error
+{
+    std::string message;
 };
 
 /**
@@ -40,14 +45,14 @@ struct Error {
  * a function whose return type is Result<_,Error>.
  */
 #define TRY_ASSIGN(variable, expression) \
-	{ \
-		auto result = (expression); \
-		if (isError(result)) { \
-			return std::get<1>(result); \
-		} else { \
-			variable = std::move(std::get<0>(result)); \
-		} \
-	}
+    { \
+        auto result = (expression); \
+        if (isError(result)) { \
+            return std::get<1>(result); \
+        } else { \
+            variable = std::move(std::get<0>(result)); \
+        } \
+    }
 
 /**
  * Macro that tries to execute a statement that evaluates into
@@ -56,12 +61,12 @@ struct Error {
  * return type is Result<_,Error>.
  */
 #define TRY(statement) \
-	{ \
-		auto result = (statement); \
-		if (isError(result)) { \
-			return std::get<1>(result); \
-		} \
-	}
+    { \
+        auto result = (statement); \
+        if (isError(result)) { \
+            return std::get<1>(result); \
+        } \
+    }
 
 /**
  * Sort of assertion, except it does not throw but rather return an error,
@@ -69,8 +74,8 @@ struct Error {
  * whose return type is Result<_,Error>.
  */
 #define TRY_ASSERT(test, message) \
-	if (!(test)) { \
-		std::ostringstream _out; \
-		_out << "Assertion failed: " << message; \
-		return Error{ _out.str() }; \
-	}
+    if (!(test)) { \
+        std::ostringstream _out; \
+        _out << "Assertion failed: " << message; \
+        return Error {_out.str()}; \
+    }

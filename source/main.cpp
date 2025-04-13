@@ -1,55 +1,98 @@
 #include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 
 #include <webgpu/webgpu_cpp.h>
 #include <webgpu/webgpu_cpp_print.h>
 
-auto main(int /*argc*/, char** /*argv*/) -> int
+#include "lib.hpp"
+#include "result.h"
+#include "slang_compiler.hpp"
+
+Result<std::string, Error> loadTextFile(const std::filesystem::path& path)
 {
-    wgpu::InstanceDescriptor instanceDescriptor {};
-    instanceDescriptor.capabilities.timedWaitAnyEnable = true;
-    wgpu::Instance instance = wgpu::CreateInstance(&instanceDescriptor);
+    std::ifstream file;
+    file.open(path);
+    if (!file.is_open()) {
+        return Error {"Could not open input file '" + path.string() + "'"};
+    }
+    std::stringstream ss;
+    ss << file.rdbuf();
+    return ss.str();
+}
+
+int main(int /*argc*/, char** /*argv*/)
+{
+    Library lib;
+
+    // Create the instance.
+    wgpu::Instance instance = lib.CreateInstance();
     if (instance == nullptr) {
-        std::cerr << "Instance creation failed!\n";
         return EXIT_FAILURE;
     }
-    // Synchronously request the adapter.
-    wgpu::RequestAdapterOptions options = {};
-    wgpu::Adapter adapter;
 
-    auto callback = [](wgpu::RequestAdapterStatus status,
-                       wgpu::Adapter adapter,
-                       const char* message,
-                       void* userdata)
-    {
-        if (status != wgpu::RequestAdapterStatus::Success) {
-            std::cerr << "Failed to get an adapter:" << message;
-            return;
-        }
-        *static_cast<wgpu::Adapter*>(userdata) = std::move(adapter);
-    };
-
-    auto callbackMode = wgpu::CallbackMode::WaitAnyOnly;
-    void* userdata = &adapter;
-    instance.WaitAny(
-        instance.RequestAdapter(&options, callbackMode, callback, userdata),
-        UINT64_MAX);
+    // Request the adapter.
+    wgpu::Adapter adapter = lib.RequestAdapter(instance);
     if (adapter == nullptr) {
-        std::cerr << "RequestAdapter failed!\n";
         return EXIT_FAILURE;
     }
 
-    wgpu::DawnAdapterPropertiesPowerPreference power_props {};
-
-    wgpu::AdapterInfo info {};
-    info.nextInChain = &power_props;
-
-    adapter.GetInfo(&info);
+    // Get and display adapter information.
+    wgpu::AdapterInfo info = lib.GetAdapterInfo(adapter);
     std::cout << "VendorID: " << std::hex << info.vendorID << std::dec << "\n";
     std::cout << "Vendor: " << info.vendor << "\n";
     std::cout << "Architecture: " << info.architecture << "\n";
     std::cout << "DeviceID: " << std::hex << info.deviceID << std::dec << "\n";
     std::cout << "Name: " << info.device << "\n";
     std::cout << "Driver description: " << info.description << "\n";
+
+    // Request the device.
+    wgpu::Device device = lib.RequestDevice(adapter);
+    if (device == nullptr) {
+        return EXIT_FAILURE;
+    }
+
+    std::cout << "Device: " << device.Get() << "\n";
+
+    // Get the default queue.
+    wgpu::Queue queue = device.GetQueue();
+
+    std::cout << std::filesystem::current_path() << "\n";
+    std::filesystem::path path("../../source/shaders/hello_world.slang");
+    std::cout << "Looking for shader file at: "
+              << std::filesystem::absolute(path) << "\n";
+    if (!std::filesystem::exists(path)) {
+        std::cerr << "Shader file does not exist at: "
+                  << std::filesystem::absolute(path) << "\n";
+        return EXIT_FAILURE;
+    }
+    std::string slangSource;
+    auto result = loadTextFile(path);
+    if (isError(result)) {
+        std::cerr << "Error loading file: " << std::get<1>(result).message
+                  << "\n";
+        return EXIT_FAILURE;
+    }
+    slangSource = std::get<0>(result);
+    std::cout << "Loaded Slang source:\n" << slangSource << "\n";
+
+    std::vector<std::string> entryPoints = {"computeMain"};
+    std::vector<std::string> includeDirectories = {};
+
+    // Compile the Slang source to WGSL.
+    std::string wgslSource;
+    auto compileResult = slang_compiler::compileSlangToWgsl(
+        "hello_world", entryPoints, includeDirectories);
+    if (isError(compileResult)) {
+        std::cerr << "Error compiling Slang to WGSL: "
+                  << std::get<1>(compileResult).message << "\n";
+        return EXIT_FAILURE;
+    }
+    wgslSource = std::get<0>(compileResult);
+
+    // Print the WGSL source code.
+    std::cout << "WGSL Source:\n" << wgslSource << "\n";
+
     return EXIT_SUCCESS;
 }

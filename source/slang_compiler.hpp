@@ -28,7 +28,6 @@ namespace slang_compiler
  */
 Result<std::string, Error> compileSlangToWgsl(
     const std::string& moduleName,
-    const std::string& slangSource,
     const std::vector<std::string>& entryPoints,
     const std::vector<std::string>& includeDirectories = {});
 

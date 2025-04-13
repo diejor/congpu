@@ -2,20 +2,49 @@
 
 #include <string>
 
+#include <webgpu/webgpu_cpp.h>
+
 /**
- * @brief The core implementation of the executable
+ * @brief The core implementation of the executable.
  *
- * This class makes up the library part of the executable, which means that the
- * main logic is implemented here. This kind of separation makes it easy to
- * test the implementation for the executable, because the logic is nicely
- * separated from the command-line logic implemented in the main function.
+ * This class implements the main WebGPU initialization logic, abstracting the
+ * process of creating a WebGPU instance, requesting an adapter and device, and
+ * retrieving adapter info.
  */
-struct library
+struct Library
 {
     /**
-     * @brief Simply initializes the name member to the name of the project
+     * @brief Constructs the Library and initializes the name.
      */
-    library();
+    Library();
 
-    std::string name;
+    /// The name of the project.
+    std::string Name;
+
+    /**
+     * @brief Creates a WebGPU instance.
+     * @return A valid wgpu::Instance, or nullptr if creation failed.
+     */
+    wgpu::Instance CreateInstance();
+
+    /**
+     * @brief Synchronously requests a WebGPU adapter.
+     * @param instance The instance from which to request the adapter.
+     * @return A valid wgpu::Adapter, or nullptr if the request failed.
+     */
+    wgpu::Adapter RequestAdapter(wgpu::Instance instance);
+
+    /**
+     * @brief Synchronously requests a WebGPU device from an adapter.
+     * @param adapter The adapter from which to request the device.
+     * @return A valid wgpu::Device, or nullptr if the request failed.
+     */
+    wgpu::Device RequestDevice(wgpu::Adapter adapter);
+
+    /**
+     * @brief Retrieves information about a given adapter.
+     * @param adapter The adapter from which to retrieve information.
+     * @return A filled wgpu::AdapterInfo structure.
+     */
+    wgpu::AdapterInfo GetAdapterInfo(wgpu::Adapter adapter);
 };

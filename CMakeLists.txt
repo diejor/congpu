@@ -6,7 +6,6 @@ project(
     congpu
     VERSION 0.1.0
     DESCRIPTION "Deep Neural Network Library with Dawn native"
-    HOMEPAGE_URL "https://diejor.tech"
     LANGUAGES CXX
 )
 
@@ -31,8 +30,13 @@ target_compile_features(congpu_lib PUBLIC cxx_std_20)
 
 find_package(fmt REQUIRED)
 find_package(slang REQUIRED)
+find_package(dawn REQUIRED)
 
-target_link_libraries(congpu_lib PRIVATE fmt::fmt slang::slang)
+target_link_libraries(congpu_lib PUBLIC
+    fmt::fmt 
+    slang::slang
+    dawn::webgpu_dawn
+)
 
 # ---- Declare executable ----
 
@@ -43,7 +47,7 @@ set_property(TARGET congpu_exe PROPERTY OUTPUT_NAME congpu)
 
 target_compile_features(congpu_exe PRIVATE cxx_std_20)
 
-find_package(Dawn REQUIRED)
+find_package(dawn REQUIRED)
 
 target_link_libraries(congpu_exe PRIVATE
     congpu_lib

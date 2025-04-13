@@ -4,15 +4,9 @@
 #include "slang_compiler.hpp"
 
 #include <slang-com-ptr.h>
+#include <slang.h>
 
 using namespace slang_compiler;
-
-namespace
-{
-
-//------------------------------------------------------------------------------
-// Internal Helper Types and Functions
-//------------------------------------------------------------------------------
 
 /**
  * @brief Structure to hold the active Slang session.
@@ -34,6 +28,7 @@ Result<SessionInfo, Error> createSlangSession(
     const std::vector<std::string>& includeDirectories)
 {
     SessionInfo sessionInfo;
+    slang::createGlobalSession(sessionInfo.globalSession.writeRef());
 
     slang::SessionDesc sessionDesc;
 
@@ -82,17 +77,11 @@ struct ModuleInfo
 Result<ModuleInfo, Error> loadSlangModule(
     const Slang::ComPtr<slang::ISession>& session,
     const std::string& moduleName,
-    const std::string& slangSource,
     const std::vector<std::string>& entryPoints)
 {
-    // Use a dummy source location for diagnostics.
-    const char* sourceLocation = "<in-memory>";
-
     Slang::ComPtr<slang::IBlob> diagnostics;
     slang::IModule* module =
-        session->loadModuleFromSourceString(moduleName.c_str(),
-                                            sourceLocation,
-                                            slangSource.c_str(),
+        session->loadModule(moduleName.c_str(),
                                             diagnostics.writeRef());
     if (diagnostics) {
         std::string message =
@@ -123,6 +112,9 @@ Result<ModuleInfo, Error> loadSlangModule(
         components.push_back(entryPoint);
     }
     Slang::ComPtr<slang::IComponentType> program;
+    session->createCompositeComponentType(
+        components.data(), static_cast<SlangInt32>(components.size()),
+        program.writeRef());
 
     return ModuleInfo {program, dependencyFiles};
 }
@@ -152,6 +144,9 @@ Result<std::string, Error> compileModuleToWgsl(
 
     Slang::ComPtr<slang::IBlob> codeBlob;
     Slang::ComPtr<ISlangBlob> codeDiagnostics;
+    int targetIndex = 0;
+    linkedProgram->getTargetCode(
+        targetIndex, codeBlob.writeRef(), codeDiagnostics.writeRef());
     // With a single target configured (WGSL)
     if (codeDiagnostics) {
         std::string message =
@@ -165,15 +160,8 @@ Result<std::string, Error> compileModuleToWgsl(
     return wgslSource;
 }
 
-}    // namespace
-
-//------------------------------------------------------------------------------
-// Public API Implementation
-//------------------------------------------------------------------------------
-
 Result<std::string, Error> slang_compiler::compileSlangToWgsl(
     const std::string& moduleName,
-    const std::string& slangSource,
     const std::vector<std::string>& entryPoints,
     const std::vector<std::string>& includeDirectories)
 {
@@ -185,7 +173,7 @@ Result<std::string, Error> slang_compiler::compileSlangToWgsl(
     ModuleInfo moduleInfo;
     TRY_ASSIGN(moduleInfo,
                loadSlangModule(
-                   sessionInfo.session, moduleName, slangSource, entryPoints));
+                   sessionInfo.session, moduleName, entryPoints));
 
     // Compile the loaded module into WGSL.
     std::string wgslOutput;
