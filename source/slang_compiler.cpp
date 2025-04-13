@@ -19,10 +19,8 @@ namespace
  */
 struct SessionInfo
 {
-    Slang::ComPtr<slang::IGlobalSession>
-        globalSession;    ///< Handle to the global Slang session.
-    Slang::ComPtr<slang::ISession>
-        session;    ///< Handle to the specific Slang session.
+    Slang::ComPtr<slang::IGlobalSession> globalSession;
+    Slang::ComPtr<slang::ISession> session;
 };
 
 /**

@@ -10,7 +10,7 @@ class Recipe(ConanFile):
 
     def requirements(self):
         self.requires("fmt/11.0.2")
-        self.requires("dawn/0.1")
+        self.requires("dawn/7069")
         self.requires("slang/2025.6.3")
 
     def build_requirements(self):
