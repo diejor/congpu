@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>source/slang_compiler.cpp file | congpu</title>
+  <title>Library struct | congpu</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -49,140 +49,154 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="dir_b2f33c71d4aa5e7af42a1ca61ff5af1b.html">source</a>/</span>slang_compiler.cpp <span class="m-thin">file</span>
+          Library <span class="m-thin">struct</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="lib_8hpp.html">&lt;source/lib.hpp&gt;</a></div>
         </h1>
-        <p><span></span></p>
+        <p>The core implementation of the executable.</p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
             <li>
               Reference
               <ul>
-                <li><a href="#nested-classes">Classes</a></li>
-                <li><a href="#func-members">Functions</a></li>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-methods">Public functions</a></li>
+                <li><a href="#pub-attribs">Public variables</a></li>
               </ul>
             </li>
           </ul>
         </nav>
-        <section id="nested-classes">
-          <h2><a href="#nested-classes">Classes</a></h2>
+<p>This class implements the main WebGPU initialization logic, abstracting the process of creating a WebGPU instance, requesting an adapter and device, and retrieving adapter info.</p>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
             <dt>
-              struct <a href="structSessionInfo.html" class="m-doc">SessionInfo</a>
+              <span class="m-doc-wrap-bumper"><a href="#a82338219d8bf51962ff5f60a0db21b19" class="m-doc">Library</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
-            <dd>Structure to hold the active Slang session.</dd>
-            <dt>
-              struct <a href="structModuleInfo.html" class="m-doc">ModuleInfo</a>
-            </dt>
-            <dd>Structure to hold a loaded module and its dependency files.</dd>
+            <dd>Constructs the <a href="structLibrary.html" class="m-doc">Library</a> and initializes the name.</dd>
           </dl>
         </section>
-        <section id="func-members">
-          <h2><a href="#func-members">Functions</a></h2>
+        <section id="pub-methods">
+          <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
             <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#a13dea70d705213c2508dffcdcce2c877" class="m-doc">createSlangSession</a>(</span><span class="m-doc-wrap">const std::vector&lt;std::string&gt;&amp; includeDirectories) -&gt; <a href="result_8h.html#a88f3f250b07dd1e328a0dfe21f6b5315" class="m-doc">Result</a>&lt;<a href="structSessionInfo.html" class="m-doc">SessionInfo</a>, <a href="structError.html" class="m-doc">Error</a>&gt;</span>
+              <span class="m-doc-wrap-bumper">auto <a href="#a7e40218bf7ad7af3ff7bf790c387a7e6" class="m-doc">CreateInstance</a>(</span><span class="m-doc-wrap">) -&gt; wgpu::Instance</span>
             </dt>
-            <dd>Creates a new Slang session with optional include directories.</dd>
+            <dd>Creates a WebGPU instance.</dd>
             <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#a6a965c8e6d80e16b6693d11cfa324291" class="m-doc">loadSlangModule</a>(</span><span class="m-doc-wrap">const Slang::ComPtr&lt;slang::ISession&gt;&amp; session,
-              const std::string&amp; moduleName,
-              const std::vector&lt;std::string&gt;&amp; entryPoints) -&gt; <a href="result_8h.html#a88f3f250b07dd1e328a0dfe21f6b5315" class="m-doc">Result</a>&lt;<a href="structModuleInfo.html" class="m-doc">ModuleInfo</a>, <a href="structError.html" class="m-doc">Error</a>&gt;</span>
+              <span class="m-doc-wrap-bumper">auto <a href="#a055d56d749fc87bf90a96ef623843001" class="m-doc">RequestAdapter</a>(</span><span class="m-doc-wrap">wgpu::Instance instance) -&gt; wgpu::Adapter</span>
             </dt>
-            <dd>Loads a Slang module from a source string.</dd>
+            <dd>Synchronously requests a WebGPU adapter.</dd>
             <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#ab84f848cbc31ee2e14d1df20b7b35f09" class="m-doc">compileModuleToWgsl</a>(</span><span class="m-doc-wrap">const Slang::ComPtr&lt;slang::IComponentType&gt;&amp; program,
-              const std::string&amp; moduleName) -&gt; <a href="result_8h.html#a88f3f250b07dd1e328a0dfe21f6b5315" class="m-doc">Result</a>&lt;std::string, <a href="structError.html" class="m-doc">Error</a>&gt;</span>
+              <span class="m-doc-wrap-bumper">auto <a href="#ab930596bea1d2284004367af08e16279" class="m-doc">RequestDevice</a>(</span><span class="m-doc-wrap">wgpu::Adapter adapter) -&gt; wgpu::Device</span>
             </dt>
-            <dd>Compiles a loaded composite module to WGSL.</dd>
+            <dd>Synchronously requests a WebGPU device from an adapter.</dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a6803d77af59226cd833f25a369536bec" class="m-doc">GetAdapterInfo</a>(</span><span class="m-doc-wrap">wgpu::Adapter adapter) -&gt; wgpu::AdapterInfo</span>
+            </dt>
+            <dd>Retrieves information about a given adapter.</dd>
+          </dl>
+        </section>
+        <section id="pub-attribs">
+          <h2><a href="#pub-attribs">Public variables</a></h2>
+          <dl class="m-doc">
+            <dt id="a1654f801e3d173a61e978d0bcf7a6458">
+              std::string <a href="#a1654f801e3d173a61e978d0bcf7a6458" class="m-doc-self">mName</a>
+            </dt>
+            <dd>The name of the project.</dd>
           </dl>
         </section>
         <section>
           <h2>Function documentation</h2>
-          <section class="m-doc-details" id="a13dea70d705213c2508dffcdcce2c877"><div>
+          <section class="m-doc-details" id="a82338219d8bf51962ff5f60a0db21b19"><div>
             <h3>
-              <span class="m-doc-wrap-bumper"><a href="result_8h.html#a88f3f250b07dd1e328a0dfe21f6b5315" class="m-doc">Result</a>&lt;<a href="structSessionInfo.html" class="m-doc">SessionInfo</a>, <a href="structError.html" class="m-doc">Error</a>&gt; </span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a13dea70d705213c2508dffcdcce2c877" class="m-doc-self">createSlangSession</a>(</span><span class="m-doc-wrap">const std::vector&lt;std::string&gt;&amp; includeDirectories)</span></span>
+              <span class="m-doc-wrap-bumper"> Library::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a82338219d8bf51962ff5f60a0db21b19" class="m-doc-self">Library</a>(</span><span class="m-doc-wrap">)</span></span>
             </h3>
-            <p>Creates a new Slang session with optional include directories.</p>
+            <p>Constructs the <a href="structLibrary.html" class="m-doc">Library</a> and initializes the name.</p>
+<p>Constructs the <a href="structLibrary.html" class="m-doc">Library</a> and initializes the project name.</p>
+          </div></section>
+          <section class="m-doc-details" id="a7e40218bf7ad7af3ff7bf790c387a7e6"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">wgpu::Instance Library::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a7e40218bf7ad7af3ff7bf790c387a7e6" class="m-doc-self">CreateInstance</a>(</span><span class="m-doc-wrap">)</span></span>
+            </h3>
+            <p>Creates a WebGPU instance.</p>
             <table class="m-table m-fullwidth m-flat">
-              <thead>
-                <tr><th colspan="2">Parameters</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="width: 1%">includeDirectories</td>
-                  <td>A vector of include directory paths.</td>
-                </tr>
-              </tbody>
               <tfoot>
                 <tr>
-                  <th>Returns</th>
-                  <td>Result&lt;SessionInfo, Error&gt; Returns a <a href="structSessionInfo.html" class="m-doc">SessionInfo</a> on success, otherwise an <a href="structError.html" class="m-doc">Error</a>.</td>
+                  <th style="width: 1%">Returns</th>
+                  <td>A valid wgpu::Instance, or nullptr if creation failed.</td>
                 </tr>
               </tfoot>
             </table>
           </div></section>
-          <section class="m-doc-details" id="a6a965c8e6d80e16b6693d11cfa324291"><div>
+          <section class="m-doc-details" id="a055d56d749fc87bf90a96ef623843001"><div>
             <h3>
-              <span class="m-doc-wrap-bumper"><a href="result_8h.html#a88f3f250b07dd1e328a0dfe21f6b5315" class="m-doc">Result</a>&lt;<a href="structModuleInfo.html" class="m-doc">ModuleInfo</a>, <a href="structError.html" class="m-doc">Error</a>&gt; </span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a6a965c8e6d80e16b6693d11cfa324291" class="m-doc-self">loadSlangModule</a>(</span><span class="m-doc-wrap">const Slang::ComPtr&lt;slang::ISession&gt;&amp; session,
-              const std::string&amp; moduleName,
-              const std::vector&lt;std::string&gt;&amp; entryPoints)</span></span>
+              <span class="m-doc-wrap-bumper">wgpu::Adapter Library::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a055d56d749fc87bf90a96ef623843001" class="m-doc-self">RequestAdapter</a>(</span><span class="m-doc-wrap">wgpu::Instance instance)</span></span>
             </h3>
-            <p>Loads a Slang module from a source string.</p>
+            <p>Synchronously requests a WebGPU adapter.</p>
             <table class="m-table m-fullwidth m-flat">
               <thead>
                 <tr><th colspan="2">Parameters</th></tr>
               </thead>
               <tbody>
                 <tr>
-                  <td style="width: 1%">session</td>
-                  <td>The active Slang session.</td>
-                </tr>
-                <tr>
-                  <td>moduleName</td>
-                  <td>The name to give the module.</td>
-                </tr>
-                <tr>
-                  <td>entryPoints</td>
-                  <td>Entry point names to add into the composite module.</td>
+                  <td style="width: 1%">instance</td>
+                  <td>The instance from which to request the adapter.</td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr>
                   <th>Returns</th>
-                  <td>Result&lt;ModuleInfo, Error&gt; Returns a <a href="structModuleInfo.html" class="m-doc">ModuleInfo</a> on success, otherwise an <a href="structError.html" class="m-doc">Error</a>.</td>
+                  <td>A valid wgpu::Adapter, or nullptr if the request failed.</td>
                 </tr>
               </tfoot>
             </table>
           </div></section>
-          <section class="m-doc-details" id="ab84f848cbc31ee2e14d1df20b7b35f09"><div>
+          <section class="m-doc-details" id="ab930596bea1d2284004367af08e16279"><div>
             <h3>
-              <span class="m-doc-wrap-bumper"><a href="result_8h.html#a88f3f250b07dd1e328a0dfe21f6b5315" class="m-doc">Result</a>&lt;std::string, <a href="structError.html" class="m-doc">Error</a>&gt; </span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#ab84f848cbc31ee2e14d1df20b7b35f09" class="m-doc-self">compileModuleToWgsl</a>(</span><span class="m-doc-wrap">const Slang::ComPtr&lt;slang::IComponentType&gt;&amp; program,
-              const std::string&amp; moduleName)</span></span>
+              <span class="m-doc-wrap-bumper">wgpu::Device Library::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#ab930596bea1d2284004367af08e16279" class="m-doc-self">RequestDevice</a>(</span><span class="m-doc-wrap">wgpu::Adapter adapter)</span></span>
             </h3>
-            <p>Compiles a loaded composite module to WGSL.</p>
+            <p>Synchronously requests a WebGPU device from an adapter.</p>
             <table class="m-table m-fullwidth m-flat">
               <thead>
                 <tr><th colspan="2">Parameters</th></tr>
               </thead>
               <tbody>
                 <tr>
-                  <td style="width: 1%">program</td>
-                  <td>The composite module.</td>
-                </tr>
-                <tr>
-                  <td>moduleName</td>
-                  <td>The name of the module (for diagnostics).</td>
+                  <td style="width: 1%">adapter</td>
+                  <td>The adapter from which to request the device.</td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr>
                   <th>Returns</th>
-                  <td><a href="result_8h.html#a88f3f250b07dd1e328a0dfe21f6b5315" class="m-doc">Result&lt;std::<wbr />string, Error&gt;</a> Returns the WGSL code as a string on success; otherwise, an <a href="structError.html" class="m-doc">Error</a>.</td>
+                  <td>A valid wgpu::Device, or nullptr if the request failed.</td>
                 </tr>
               </tfoot>
             </table>
-<p>This function links the module and extracts the WGSL code.</p>
+          </div></section>
+          <section class="m-doc-details" id="a6803d77af59226cd833f25a369536bec"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">wgpu::AdapterInfo Library::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a6803d77af59226cd833f25a369536bec" class="m-doc-self">GetAdapterInfo</a>(</span><span class="m-doc-wrap">wgpu::Adapter adapter)</span></span>
+            </h3>
+            <p>Retrieves information about a given adapter.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">adapter</td>
+                  <td>The adapter from which to retrieve information.</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th>Returns</th>
+                  <td>A filled wgpu::AdapterInfo structure.</td>
+                </tr>
+              </tfoot>
+            </table>
           </div></section>
         </section>
       </div>
