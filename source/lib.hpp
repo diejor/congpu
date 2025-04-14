@@ -19,7 +19,7 @@ struct Library
     Library();
 
     /// The name of the project.
-    std::string Name;
+    std::string mName;
 
     /**
      * @brief Creates a WebGPU instance.

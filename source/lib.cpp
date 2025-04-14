@@ -5,7 +5,7 @@
 
 /// Constructs the Library and initializes the project name.
 Library::Library()
-    : Name("congpu")
+    : mName("congpu")
 {
 }
 
