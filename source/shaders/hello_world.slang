@@ -6,6 +6,6 @@ RWStructuredBuffer<float> result;
 [numthreads(1,1,1)]
 void computeMain(uint3 threadId : SV_DispatchThreadID)
 {
-    uint index = threadId.x;
+    let index = threadId.x;
     result[index] = buffer0[index] + buffer1[index];
 }
