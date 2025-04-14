@@ -58,27 +58,10 @@ int main(int /*argc*/, char** /*argv*/)
     // Get the default queue.
     wgpu::Queue queue = device.GetQueue();
 
-    std::cout << std::filesystem::current_path() << "\n";
-    std::filesystem::path path("../../source/shaders/hello_world.slang");
-    std::cout << "Looking for shader file at: "
-              << std::filesystem::absolute(path) << "\n";
-    if (!std::filesystem::exists(path)) {
-        std::cerr << "Shader file does not exist at: "
-                  << std::filesystem::absolute(path) << "\n";
-        return EXIT_FAILURE;
-    }
-    std::string slangSource;
-    auto result = loadTextFile(path);
-    if (isError(result)) {
-        std::cerr << "Error loading file: " << std::get<1>(result).message
-                  << "\n";
-        return EXIT_FAILURE;
-    }
-    slangSource = std::get<0>(result);
-    std::cout << "Loaded Slang source:\n" << slangSource << "\n";
+    std::filesystem::path path("../../source/shaders/");
 
     std::vector<std::string> entryPoints = {"computeMain"};
-    std::vector<std::string> includeDirectories = {};
+    std::vector<std::string> includeDirectories = {path.string()};
 
     // Compile the Slang source to WGSL.
     std::string wgslSource;

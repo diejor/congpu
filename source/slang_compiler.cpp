@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iostream>
 #include <vector>
 
 #include "slang_compiler.hpp"
@@ -81,14 +82,15 @@ Result<ModuleInfo, Error> loadSlangModule(
 {
     Slang::ComPtr<slang::IBlob> diagnostics;
     slang::IModule* module =
-        session->loadModule(moduleName.c_str(),
-                                            diagnostics.writeRef());
+        session->loadModule(moduleName.c_str(), diagnostics.writeRef());
+    std::cout << "Loaded module '" << moduleName << "'\n";
     if (diagnostics) {
         std::string message =
             reinterpret_cast<const char*>(diagnostics->getBufferPointer());
         return Error {"Could not load slang module '" + moduleName + "':\n"
                       + message};
     }
+    std::cout << "Loaded module, diagnostics: '" << diagnostics << "'\n";
 
     // Gather dependency files if any.
     size_t depCount = static_cast<size_t>(module->getDependencyFileCount());
@@ -113,7 +115,8 @@ Result<ModuleInfo, Error> loadSlangModule(
     }
     Slang::ComPtr<slang::IComponentType> program;
     session->createCompositeComponentType(
-        components.data(), static_cast<SlangInt32>(components.size()),
+        components.data(),
+        static_cast<SlangInt32>(components.size()),
         program.writeRef());
 
     return ModuleInfo {program, dependencyFiles};
@@ -172,8 +175,7 @@ Result<std::string, Error> slang_compiler::compileSlangToWgsl(
     // Load the module from the provided in-memory source.
     ModuleInfo moduleInfo;
     TRY_ASSIGN(moduleInfo,
-               loadSlangModule(
-                   sessionInfo.session, moduleName, entryPoints));
+               loadSlangModule(sessionInfo.session, moduleName, entryPoints));
 
     // Compile the loaded module into WGSL.
     std::string wgslOutput;
