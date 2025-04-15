@@ -12,6 +12,7 @@ class Recipe(ConanFile):
         self.requires("fmt/11.0.2")
         self.requires("dawn/7069")
         self.requires("slang/2025.6.3")
+        self.requires("tracy/0.11.1")
 
     def build_requirements(self):
         self.test_requires("catch2/3.7.1")

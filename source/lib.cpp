@@ -3,6 +3,8 @@
 
 #include "lib.hpp"
 
+#include <tracy/Tracy.hpp>
+
 /// Constructs the Library and initializes the project name.
 Library::Library()
     : mName("congpu")
@@ -11,6 +13,7 @@ Library::Library()
 
 wgpu::Instance Library::CreateInstance()
 {
+    ZoneScoped;
     wgpu::InstanceDescriptor instanceDescriptor {};
     instanceDescriptor.capabilities.timedWaitAnyEnable = true;
     wgpu::Instance instance = wgpu::CreateInstance(&instanceDescriptor);
@@ -22,6 +25,7 @@ wgpu::Instance Library::CreateInstance()
 
 wgpu::Adapter Library::RequestAdapter(wgpu::Instance instance)
 {
+    ZoneScoped;
     wgpu::RequestAdapterOptions adapterOptions = {};
     wgpu::Adapter adapter = nullptr;
 
@@ -55,6 +59,7 @@ wgpu::Adapter Library::RequestAdapter(wgpu::Instance instance)
 
 wgpu::Device Library::RequestDevice(wgpu::Adapter adapter)
 {
+    ZoneScoped;
     wgpu::DeviceDescriptor deviceDescriptor {};
     wgpu::Device device = nullptr;
 
@@ -89,6 +94,7 @@ wgpu::Device Library::RequestDevice(wgpu::Adapter adapter)
 
 wgpu::AdapterInfo Library::GetAdapterInfo(wgpu::Adapter adapter)
 {
+    ZoneScoped;
     wgpu::DawnAdapterPropertiesPowerPreference
         powerProps {};    // Optional extra settings.
     wgpu::AdapterInfo info {};

@@ -31,11 +31,13 @@ target_compile_features(congpu_lib PUBLIC cxx_std_20)
 find_package(fmt REQUIRED)
 find_package(slang REQUIRED)
 find_package(dawn REQUIRED)
+find_package(Tracy REQUIRED)
 
 target_link_libraries(congpu_lib PUBLIC
     fmt::fmt 
     slang::slang
     dawn::webgpu_dawn
+    Tracy::TracyClient
 )
 
 # ---- Declare executable ----
@@ -52,6 +54,7 @@ find_package(dawn REQUIRED)
 target_link_libraries(congpu_exe PRIVATE
     congpu_lib
     dawn::webgpu_dawn
+    Tracy::TracyClient
 )
 
 # ---- Install rules ----

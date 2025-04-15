@@ -4,6 +4,7 @@
 
 TEST_CASE("Name is congpu", "[library]")
 {
-    auto const lib = Library {};
+    auto lib = Library {};
+    wgpu::Instance instance = lib.CreateInstance();
     REQUIRE(lib.mName == "congpu");
 }

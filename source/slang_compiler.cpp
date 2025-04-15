@@ -6,6 +6,7 @@
 
 #include <slang-com-ptr.h>
 #include <slang.h>
+#include <tracy/Tracy.hpp>
 
 using namespace slang_compiler;
 
@@ -28,6 +29,7 @@ struct SessionInfo
 Result<SessionInfo, Error> createSlangSession(
     const std::vector<std::string>& includeDirectories)
 {
+    ZoneScoped;
     SessionInfo sessionInfo;
     slang::createGlobalSession(sessionInfo.globalSession.writeRef());
 
@@ -80,6 +82,7 @@ Result<ModuleInfo, Error> loadSlangModule(
     const std::string& moduleName,
     const std::vector<std::string>& entryPoints)
 {
+    ZoneScoped;
     Slang::ComPtr<slang::IBlob> diagnostics;
     slang::IModule* module =
         session->loadModule(moduleName.c_str(), diagnostics.writeRef());
@@ -136,6 +139,7 @@ Result<std::string, Error> compileModuleToWgsl(
     const Slang::ComPtr<slang::IComponentType>& program,
     const std::string& moduleName)
 {
+    ZoneScoped;
     Slang::ComPtr<slang::IComponentType> linkedProgram;
     Slang::ComPtr<ISlangBlob> linkDiagnostics;
     program->link(linkedProgram.writeRef(), linkDiagnostics.writeRef());
@@ -168,6 +172,7 @@ Result<std::string, Error> slang_compiler::compileSlangToWgsl(
     const std::vector<std::string>& entryPoints,
     const std::vector<std::string>& includeDirectories)
 {
+    ZoneScoped;
     // Create a Slang session with the provided include directories.
     SessionInfo sessionInfo;
     TRY_ASSIGN(sessionInfo, createSlangSession(includeDirectories));

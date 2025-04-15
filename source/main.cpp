@@ -3,10 +3,13 @@
 #include <fstream>
 #include <iostream>
 
+#include <dawn/webgpu_cpp_print.h>
+#include <tracy/Tracy.hpp>
 #include <webgpu/webgpu_cpp.h>
 #include <webgpu/webgpu_cpp_print.h>
 
 #include "lib.hpp"
+#include "logging_macros.h"
 #include "result.h"
 #include "slang_compiler.hpp"
 
@@ -24,6 +27,8 @@ Result<std::string, Error> loadTextFile(const std::filesystem::path& path)
 
 int main(int /*argc*/, char** /*argv*/)
 {
+    ZoneScoped;
+    LOG_TRACE("Starting Slang to WGSL compilation...");
     Library lib;
 
     // Create the instance.
@@ -37,15 +42,6 @@ int main(int /*argc*/, char** /*argv*/)
     if (adapter == nullptr) {
         return EXIT_FAILURE;
     }
-
-    // Get and display adapter information.
-    wgpu::AdapterInfo info = lib.GetAdapterInfo(adapter);
-    std::cout << "VendorID: " << std::hex << info.vendorID << std::dec << "\n";
-    std::cout << "Vendor: " << info.vendor << "\n";
-    std::cout << "Architecture: " << info.architecture << "\n";
-    std::cout << "DeviceID: " << std::hex << info.deviceID << std::dec << "\n";
-    std::cout << "Name: " << info.device << "\n";
-    std::cout << "Driver description: " << info.description << "\n";
 
     // Request the device.
     wgpu::Device device = lib.RequestDevice(adapter);
@@ -68,14 +64,15 @@ int main(int /*argc*/, char** /*argv*/)
     auto compileResult = slang_compiler::compileSlangToWgsl(
         "hello_world", entryPoints, includeDirectories);
     if (isError(compileResult)) {
-        std::cerr << "Error compiling Slang to WGSL: "
-                  << std::get<1>(compileResult).message << "\n";
+        LOG_ERROR("Error compiling Slang to WGSL: %s",
+                  std::get<1>(compileResult).message.c_str());
         return EXIT_FAILURE;
     }
     wgslSource = std::get<0>(compileResult);
 
-    // Print the WGSL source code.
     std::cout << "WGSL Source:\n" << wgslSource << "\n";
+
+    LOG_TRACE("Closing Slang to WGSL compilation...");
 
     return EXIT_SUCCESS;
 }

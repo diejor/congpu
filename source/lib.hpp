@@ -18,6 +18,7 @@ struct Library
      */
     Library();
 
+  public:
     /// The name of the project.
     std::string mName;
 
