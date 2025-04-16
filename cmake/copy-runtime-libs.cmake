@@ -1,35 +1,45 @@
-function(copy_runtime_libs Target)
+# Set RUNTIME_LIBS as a global variable (make sure it's available across all CMake files)
+set(RUNTIME_LIBS "" CACHE STRING "List of runtime libraries to be copied")
+
+function(collect_runtime_libs)
   if(CONAN_RUNTIME_LIB_DIRS)
     set(resolved_dirs "")
-    # Resolve the actual directory paths by stripping unwanted generator expressions,
-    # e.g. "$<$<CONFIG:Release>:/some/path>" or "$<$<CONFIG:Debug>:/another/path>".
     foreach(dir IN LISTS CONAN_RUNTIME_LIB_DIRS)
-      # Remove the beginning "$<$<CONFIG:...>:" part, if present.
       string(REGEX REPLACE "^\\$<\\$<CONFIG:[^>]+>:" "" rdir "${dir}")
-      # Remove the trailing ">", if present.
       string(REGEX REPLACE ">$" "" rdir "${rdir}")
       list(APPEND resolved_dirs "${rdir}")
     endforeach()
-    message(STATUS "Resolved runtime library directories: ${resolved_dirs}")
 
-    # For each resolved directory, collect shared library files.
     foreach(dir IN LISTS resolved_dirs)
-      file(GLOB runtime_libs
+      file(GLOB libs_to_install
         "${dir}/*.dll"    # Windows
         "${dir}/*.so"     # Linux
         "${dir}/*.dylib"  # macOS
       )
-      message(STATUS "Found libraries in ${dir}: ${runtime_libs}")
-      # For each library found, add a post-build command to copy it to the target's output directory.
-      foreach(lib IN LISTS runtime_libs)
-        add_custom_command(TARGET ${Target} POST_BUILD
-          COMMAND ${CMAKE_COMMAND} -E echo "Post Build: Copying ${lib} to $<TARGET_FILE_DIR:${Target}>"
-          COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${lib}"
-            "$<TARGET_FILE_DIR:${Target}>"
-          COMMENT "Copying ${lib} to output directory"
-        )
-      endforeach()
+      list(APPEND RUNTIME_LIBS ${libs_to_install})
     endforeach()
+
+    message(STATUS "RUNTIME_LIBS: ${RUNTIME_LIBS}") 
+  else()
+    message(WARNING "No CONAN_RUNTIME_LIB_DIRS found.")
   endif()
+
+  set(RUNTIME_LIBS ${RUNTIME_LIBS} PARENT_SCOPE)
+endfunction()
+
+collect_runtime_libs()
+
+function(copy_runtime_libs target)
+    if(RUNTIME_LIBS)
+        foreach(lib IN LISTS RUNTIME_LIBS)
+            add_custom_command(TARGET ${target} POST_BUILD
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${lib}"
+                "$<TARGET_FILE_DIR:${target}>"
+                COMMENT "Copying ${lib} to $<TARGET_FILE_DIR:${target}>"
+            )
+        endforeach()
+    else()
+        message(WARNING "RUNTIME_LIBS is empty. No libraries to copy.")
+    endif()
 endfunction()
