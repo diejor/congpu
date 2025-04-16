@@ -12,6 +12,9 @@ include(Catch)
 # ---- Tests ----
 
 add_executable(congpu_test source/congpu_test.cpp)
+
+copy_runtime_libs(congpu_test)
+
 target_link_libraries(
     congpu_test PRIVATE
     congpu_lib

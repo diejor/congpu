@@ -11,6 +11,7 @@ project(
 
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
+include(cmake/copy-runtime-libs.cmake)
 
 # ---- Declare library ----
 
@@ -44,6 +45,8 @@ target_link_libraries(congpu_lib PUBLIC
 
 add_executable(congpu_exe source/main.cpp)
 add_executable(congpu::exe ALIAS congpu_exe)
+
+copy_runtime_libs(congpu_exe)
 
 set_property(TARGET congpu_exe PROPERTY OUTPUT_NAME congpu)
 
