@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>source/logging_macros.h file | congpu</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
+  <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
+  <link rel="icon" href="favicon-dark.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#22272e" />
+</head>
+<body>
+<header><nav id="navigation">
+  <div class="m-container">
+    <div class="m-row">
+      <a href="index.html" id="m-navbar-brand" class="m-col-t-8 m-col-m-none m-left-m">congpu</a>
+      <div class="m-col-t-4 m-hide-m m-text-right m-nopadr">
+        <a href="#search" class="m-doc-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+          <path id="m-doc-search-icon-path" d="m6 0c-3.31 0-6 2.69-6 6 0 3.31 2.69 6 6 6 1.49 0 2.85-0.541 3.89-1.44-0.0164 0.338 0.147 0.759 0.5 1.15l3.22 3.79c0.552 0.614 1.45 0.665 2 0.115 0.55-0.55 0.499-1.45-0.115-2l-3.79-3.22c-0.392-0.353-0.812-0.515-1.15-0.5 0.895-1.05 1.44-2.41 1.44-3.89 0-3.31-2.69-6-6-6zm0 1.56a4.44 4.44 0 0 1 4.44 4.44 4.44 4.44 0 0 1-4.44 4.44 4.44 4.44 0 0 1-4.44-4.44 4.44 4.44 0 0 1 4.44-4.44z"/>
+        </svg></a>
+        <a id="m-navbar-show" href="#navigation" title="Show navigation"></a>
+        <a id="m-navbar-hide" href="#" title="Hide navigation"></a>
+      </div>
+      <div id="m-navbar-collapse" class="m-col-t-12 m-show-m m-col-m-none m-right-m">
+        <div class="m-row">
+          <ol class="m-col-t-6 m-col-m-none">
+            <li>
+              <a href="pages.html">Pages</a>
+              <ol>
+                <li><a href="about.html">About</a></li>
+              </ol>
+            </li>
+            <li><a href="namespaces.html">Namespaces</a></li>
+          </ol>
+          <ol class="m-col-t-6 m-col-m-none" start="3">
+            <li><a href="annotated.html">Classes</a></li>
+            <li><a href="files.html">Files</a></li>
+            <li class="m-show-m"><a href="#search" class="m-doc-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+              <use href="#m-doc-search-icon-path" />
+            </svg></a></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav></header>
+<main><article>
+  <div class="m-container m-container-inflatable">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <h1>
+          <span class="m-breadcrumb"><a href="dir_b2f33c71d4aa5e7af42a1ca61ff5af1b.html">source</a>/</span>logging_macros.h <span class="m-thin">file</span>
+        </h1>
+        <p><span></span></p>
+        <nav class="m-block m-default">
+          <h3>Contents</h3>
+          <ul>
+            <li>
+              Reference
+              <ul>
+                <li><a href="#nested-classes">Classes</a></li>
+                <li><a href="#enum-members">Enums</a></li>
+                <li><a href="#func-members">Functions</a></li>
+                <li><a href="#var-members">Variables</a></li>
+                <li><a href="#define-members">Defines</a></li>
+              </ul>
+            </li>
+          </ul>
+        </nav>
+        <section id="nested-classes">
+          <h2><a href="#nested-classes">Classes</a></h2>
+          <dl class="m-doc">
+            <dt>
+              struct <a href="structLogger.html" class="m-doc">Logger</a>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="enum-members">
+          <h2><a href="#enum-members">Enums</a></h2>
+          <dl class="m-doc">
+            <dt id="aca1fd1d8935433e6ba2e3918214e07f9">
+              <span class="m-doc-wrap-bumper">enum <a href="#aca1fd1d8935433e6ba2e3918214e07f9" class="m-doc-self">LogLevel</a> { </span><span class="m-doc-wrap"><a href="#aca1fd1d8935433e6ba2e3918214e07f9a6d981d7d88e5e7ae982e5514e0a6ceac" class="m-doc">LL_NONE</a> = 0,
+              <a href="#aca1fd1d8935433e6ba2e3918214e07f9a50717458baf49c204bb0645418e0da15" class="m-doc">LL_ERROR</a>,
+              <a href="#aca1fd1d8935433e6ba2e3918214e07f9a7413c537cbbee6447b4d2a2fd90bd1c9" class="m-doc">LL_WARN</a>,
+              <a href="#aca1fd1d8935433e6ba2e3918214e07f9a3d0aabc1a000a1668922ab44aeca5771" class="m-doc">LL_INFO</a>,
+              <a href="#aca1fd1d8935433e6ba2e3918214e07f9ac3d5eeff2f636c96f5aab91b3dc90afd" class="m-doc">LL_TRACE</a> }</span>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="func-members">
+          <h2><a href="#func-members">Functions</a></h2>
+          <dl class="m-doc">
+            <dt id="a0be980c8c7fb754367a4346ac48cbf7f">
+              <span class="m-doc-wrap-bumper">void <a href="#a0be980c8c7fb754367a4346ac48cbf7f" class="m-doc-self">setLogLevel</a>(</span><span class="m-doc-wrap">int level)</span>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="var-members">
+          <h2><a href="#var-members">Variables</a></h2>
+          <dl class="m-doc">
+            <dt id="a64a47fd6c1707df302397ccf01ad667a">
+              static const char* <a href="#a64a47fd6c1707df302397ccf01ad667a" class="m-doc-self">LOG_LEVEL_STR</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a237b50ccd4be437db1d136159588316e">
+              static <a href="structLogger.html" class="m-doc">Logger</a> <a href="#a237b50ccd4be437db1d136159588316e" class="m-doc-self">DEFAULT_LOGGER</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a39b425aec1a0422292de94fd6d018842">
+              static const char* <a href="#a39b425aec1a0422292de94fd6d018842" class="m-doc-self">LOG_COLORS</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="aba65170e69aa47eaf75dc4cc5e1923c2">
+              static const char* <a href="#aba65170e69aa47eaf75dc4cc5e1923c2" class="m-doc-self">RESET_COLOR</a>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="define-members">
+          <h2><a href="#define-members">Defines</a></h2>
+          <dl class="m-doc">
+            <dt id="a3f60110a63bea98ee1cd99f1b00894b8">
+              <span class="m-doc-wrap-bumper">#define <a href="#a3f60110a63bea98ee1cd99f1b00894b8" class="m-doc-self">LOG</a>(</span><span class="m-doc-wrap">logger,
+              logLevel,
+              fmt,
+              ...)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="ae6fc70e87e424e7083c63696b8fb9e78">
+              <span class="m-doc-wrap-bumper">#define <a href="#ae6fc70e87e424e7083c63696b8fb9e78" class="m-doc-self">LOG_ERROR</a>(</span><span class="m-doc-wrap">fmt,
+              ...)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="adba1363ea408060eab75cb5a48dcb907">
+              <span class="m-doc-wrap-bumper">#define <a href="#adba1363ea408060eab75cb5a48dcb907" class="m-doc-self">LOG_WARN</a>(</span><span class="m-doc-wrap">fmt,
+              ...)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="ae69d735f8291bd2aff230fe6ffb4d4b3">
+              <span class="m-doc-wrap-bumper">#define <a href="#ae69d735f8291bd2aff230fe6ffb4d4b3" class="m-doc-self">LOG_INFO</a>(</span><span class="m-doc-wrap">fmt,
+              ...)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a20f022b1b58ba62e014b624fdd13572c">
+              <span class="m-doc-wrap-bumper">#define <a href="#a20f022b1b58ba62e014b624fdd13572c" class="m-doc-self">LOG_TRACE</a>(</span><span class="m-doc-wrap">fmt,
+              ...)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">#define <a href="#a0923f6295c0b9cfeb83f79d33cc234cb" class="m-doc">ERR</a>(</span><span class="m-doc-wrap">cond,
+              fmt,
+              ...)</span>
+            </dt>
+            <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">#define <a href="#a87e9a748e14ebbbfd3df6b0e9ebfef50" class="m-doc">WARN_COND</a>(</span><span class="m-doc-wrap">cond,
+              fmt,
+              ...)</span>
+            </dt>
+            <dd></dd>
+          </dl>
+        </section>
+        <section>
+          <h2>Define documentation</h2>
+          <section class="m-doc-details" id="a0923f6295c0b9cfeb83f79d33cc234cb"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">#define <a href="#a0923f6295c0b9cfeb83f79d33cc234cb" class="m-doc-self">ERR</a>(</span><span class="m-doc-wrap">cond,
+              fmt,
+              ...)</span>
+            </h3>
+<p>ERR:</p><p>If the condition is true, logs an error message at LL_ERROR level (including the stringized condition) and returns from the function.</p><p>Usage: ERR(val &lt; 0, &quot;Invalid negative value: %d&quot;, val);</p>
+          </div></section>
+          <section class="m-doc-details" id="a87e9a748e14ebbbfd3df6b0e9ebfef50"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">#define <a href="#a87e9a748e14ebbbfd3df6b0e9ebfef50" class="m-doc-self">WARN_COND</a>(</span><span class="m-doc-wrap">cond,
+              fmt,
+              ...)</span>
+            </h3>
+<p>WARN_COND:</p><p>If the condition is true, logs a warning message at LL_WARN level (including the stringized condition) but does not return.</p>
+          </div></section>
+        </section>
+      </div>
+    </div>
+  </div>
+</article></main>
+<div class="m-doc-search" id="search">
+  <a href="#!" onclick="return hideSearch()"></a>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-m-8 m-push-m-2">
+        <div class="m-doc-search-header m-text m-small">
+          <div><span class="m-label m-default">Tab</span> / <span class="m-label m-default">T</span> to search, <span class="m-label m-default">Esc</span> to close</div>
+          <div id="search-symbolcount">&hellip;</div>
+        </div>
+        <div class="m-doc-search-content">
+          <form>
+            <input type="search" name="q" id="search-input" placeholder="Loading &hellip;" disabled="disabled" autofocus="autofocus" autocomplete="off" spellcheck="false" />
+          </form>
+          <noscript class="m-text m-danger m-text-center">Unlike everything else in the docs, the search functionality <em>requires</em> JavaScript.</noscript>
+          <div id="search-help" class="m-text m-dim m-text-center">
+            <p class="m-noindent">Search for symbols, directories, files, pages or
+            modules. You can omit any prefix from the symbol or file path; adding a
+            <code>:</code> or <code>/</code> suffix lists all members of given symbol or
+            directory.</p>
+            <p class="m-noindent">Use <span class="m-label m-dim">&darr;</span>
+            / <span class="m-label m-dim">&uarr;</span> to navigate through the list,
+            <span class="m-label m-dim">Enter</span> to go.
+            <span class="m-label m-dim">Tab</span> autocompletes common prefix, you can
+            copy a link to the result using <span class="m-label m-dim">⌘</span>
+            <span class="m-label m-dim">L</span> while <span class="m-label m-dim">⌘</span>
+            <span class="m-label m-dim">M</span> produces a Markdown link.</p>
+          </div>
+          <div id="search-notfound" class="m-text m-warning m-text-center">Sorry, nothing was found.</div>
+          <ul id="search-results"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="search-v2.js"></script>
+<script src="searchdata-v2.js" async="async"></script>
+<footer><nav>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <p>congpu. Created with <a href="https://doxygen.org/">Doxygen</a> 1.9.8 and <a href="https://mcss.mosra.cz/">m.css</a>.</p>
+      </div>
+    </div>
+  </div>
+</nav></footer>
+</body>
+</html>
