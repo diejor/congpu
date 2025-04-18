@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "lib.hpp"
+#include "webgpu//webgpu_cpp_print.h"
 
 #include <tracy/Tracy.hpp>
 
@@ -29,7 +30,6 @@ wgpu::Adapter Library::RequestAdapter(wgpu::Instance instance)
     wgpu::RequestAdapterOptions adapterOptions = {};
     wgpu::Adapter adapter = nullptr;
 
-    // Callback to capture the adapter from the asynchronous request.
     auto adapterCallback = [](wgpu::RequestAdapterStatus status,
                               wgpu::Adapter _adapter,
                               const char* message,
@@ -45,7 +45,6 @@ wgpu::Adapter Library::RequestAdapter(wgpu::Instance instance)
     auto callbackMode = wgpu::CallbackMode::WaitAnyOnly;
     void* userdata = &adapter;
 
-    // Initiate the adapter request and wait synchronously.
     instance.WaitAny(
         instance.RequestAdapter(
             &adapterOptions, callbackMode, adapterCallback, userdata),
@@ -61,6 +60,23 @@ wgpu::Device Library::RequestDevice(wgpu::Adapter adapter)
 {
     ZoneScoped;
     wgpu::DeviceDescriptor deviceDescriptor {};
+    auto errorCallback = [](wgpu::Device const&, wgpu::ErrorType type,
+                                 wgpu::StringView message)
+    {
+        std::cerr << "Device error: " << message.data << "\n";
+        std::cerr << "Error type: " << type << "\n";
+    };
+    deviceDescriptor.SetUncapturedErrorCallback(errorCallback);
+
+    auto deviceLostCallback = [](wgpu::Device const& _device,
+                                      wgpu::DeviceLostReason reason,
+                                      wgpu::StringView message)
+    {
+        (void)_device; // Suppress unused variable warning.
+        std::cerr << "Device lost: " << message.data << "\n";
+        std::cerr << "Reason: " << reason << "\n";
+    };
+    deviceDescriptor.SetDeviceLostCallback(wgpu::CallbackMode::WaitAnyOnly, deviceLostCallback);
     wgpu::Device device = nullptr;
 
     // Callback to capture the device from the asynchronous request.

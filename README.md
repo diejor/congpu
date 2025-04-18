@@ -1,7 +1,7 @@
 [![pages-build-deployment](https://img.shields.io/github/actions/workflow/status/diejor/congpu/pages/pages-build-deployment?label=Docs)](https://diejor.github.io/congpu/)
 [![Continuous Integration](https://github.com/diejor/congpu/actions/workflows/ci.yml/badge.svg)](https://github.com/diejor/congpu/actions)
 # congpu
-This is the congpu project.
+A proof-of-concept C++ library for GPU accelerated Neural Networks with Dawn native and Slang 
 
 # Building and installing
 
