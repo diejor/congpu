@@ -85,7 +85,6 @@ int main(int /*argc*/, char** /*argv*/)
     };
     wgpu::Buffer buffer1 = device.CreateBuffer(&bufferDesc1);
 
-
     wgpu::BufferDescriptor resultBufferDesc = {
         .label = "Result Buffer",
         .usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc,
@@ -234,9 +233,11 @@ int main(int /*argc*/, char** /*argv*/)
     {
         if (status == wgpu::MapAsyncStatus::Success) {
             LOG_TRACE("Buffer mapping succeeded: %s", message.data);
-            const float* mappedData = static_cast<const float*>(
-                mapBuffer.GetConstMappedRange(0, result.size() * sizeof(float)));
-            LOG_TRACE("Mapped data: %p", reinterpret_cast<const void*>(mappedData));
+            const float* mappedData =
+                static_cast<const float*>(mapBuffer.GetConstMappedRange(
+                    0, result.size() * sizeof(float)));
+            LOG_TRACE("Mapped data: %p",
+                      reinterpret_cast<const void*>(mappedData));
             for (size_t i = 0; i < result.size(); ++i) {
                 result[i] = mappedData[i];
                 LOG_TRACE("Result[%zu]: %f", i, static_cast<double>(result[i]));
@@ -253,10 +254,8 @@ int main(int /*argc*/, char** /*argv*/)
                                              wgpu::CallbackMode::WaitAnyOnly,
                                              mapCallback);
 
-
     instance.WaitAny(handle, UINT64_MAX);
     LOG_TRACE("Buffer mapping completed.");
-
 
     return EXIT_SUCCESS;
 }
