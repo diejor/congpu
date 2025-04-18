@@ -1,5 +1,4 @@
 StructuredBuffer<float> buffer0;
-StructuredBuffer<float> buffer1;
 RWStructuredBuffer<float> result;
 
 [shader("compute")]
@@ -7,5 +6,5 @@ RWStructuredBuffer<float> result;
 void computeMain(uint3 threadId : SV_DispatchThreadID)
 {
     let index = threadId.x;
-    result[index] = buffer0[index] + buffer1[index];
+    result[index] = buffer0[index] + 1;
 }

@@ -12,6 +12,10 @@ add_custom_target(
 )
 add_dependencies(run-exe congpu_exe)
 
+target_compile_definitions(congpu_exe PRIVATE
+    SHADERS_DIR="${CMAKE_SOURCE_DIR}/source/shaders/"
+)
+
 option(BUILD_MCSS_DOCS "Build documentation using Doxygen and m.css" OFF)
 if(BUILD_MCSS_DOCS)
   include(cmake/docs.cmake)
