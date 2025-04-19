@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Keep Conan packages in ~/.conan2 for incremental caching
+  # Store Conan cache under workspace for incremental cache
   CONAN_USER_HOME: ${{ github.workspace }}/.conan2
 
 jobs:
@@ -22,34 +22,28 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
+        with: { python-version: "3.12" }
       - name: Install codespell
         run: pip3 install codespell
-
       - name: Lint
         run: cmake -D FORMAT_COMMAND=clang-format-18 -P cmake/lint.cmake
-
       - name: Spell check
         if: always()
         run: cmake -P cmake/spell.cmake
 
   ################################################################
-  # 2) COVERAGE (Ubuntu + SwiftShader)
+  # 2) COVERAGE (Ubuntu + SwiftShader + needrestart disabled)
   ################################################################
   coverage:
     needs: [ lint ]
     runs-on: ubuntu-24.04
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      NEEDRESTART_MODE: a
     steps:
       - uses: actions/checkout@v4
       - uses: mozilla-actions/sccache-action@v0.0.5
-
-      # REMOVE needrestart so its hook never fails
-      - name: Purge needrestart hook
-        run: sudo apt-get remove --purge -y needrestart
 
       - name: Install Vulkan loader & SwiftShader
         run: |
@@ -71,8 +65,7 @@ jobs:
             libxkbcommon-dev xorg-dev libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
 
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+        with: { python-version: "3.12" }
 
       - name: Conan cache
         uses: actions/cache@v4
@@ -105,19 +98,18 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   ################################################################
-  # 3) SANITIZE (Ubuntu + SwiftShader)
+  # 3) SANITIZE (Ubuntu + SwiftShader + needrestart disabled)
   ################################################################
   sanitize:
     needs: [ lint ]
     runs-on: ubuntu-24.04
     env:
       CXX: clang++-18
+      DEBIAN_FRONTEND: noninteractive
+      NEEDRESTART_MODE: a
     steps:
       - uses: actions/checkout@v4
       - uses: mozilla-actions/sccache-action@v0.0.5
-
-      - name: Purge needrestart hook
-        run: sudo apt-get remove --purge -y needrestart
 
       - name: Install Vulkan loader & SwiftShader
         run: |
@@ -136,8 +128,7 @@ jobs:
             libxkbcommon-dev xorg-dev libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
 
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+        with: { python-version: "3.12" }
 
       - name: Conan cache
         uses: actions/cache@v4
@@ -164,7 +155,7 @@ jobs:
         run: ctest --output-on-failure --no-tests=error -j 2
 
   ################################################################
-  # 4) CROSS-PLATFORM TEST MATRIX (with SwiftShader on Linux)
+  # 4) CROSS-PLATFORM TEST MATRIX
   ################################################################
   test:
     needs: [ lint ]
@@ -179,33 +170,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Ubuntu only: purge needrestart + SwiftShader + X11
-      - name: Purge needrestart hook
+      # Ubuntu-only: disable needrestart + SwiftShader + X11
+      - name: Setup Linux GPU support
         if: runner.os == 'Linux'
-        run: sudo apt-get remove --purge -y needrestart
-
-      - name: Install Vulkan loader & SwiftShader
-        if: runner.os == 'Linux'
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          NEEDRESTART_MODE: a
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y libvulkan1 vulkan-tools
+          sudo apt-get install -y libvulkan1 vulkan-tools libx11-dev libxrandr-dev \
+            libxi-dev libxrender-dev libxkbcommon-dev xorg-dev \
+            libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
           sudo mkdir -p /usr/share/vulkan/icd.d
           sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
             https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
           sudo wget -qO /usr/lib/x86_64-linux-gnu/libVkICD_swiftshader.so \
             https://storage.googleapis.com/swiftshader/artifacts/Release/Linux/libVkICD_swiftshader.so
 
-      - name: Install X11 headers
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install -y \
-            libx11-dev libxrandr-dev libxi-dev libxrender-dev \
-            libxkbcommon-dev xorg-dev libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
-
       - name: Install Python
         uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+        with: { python-version: "3.12" }
 
       - name: Conan cache
         uses: actions/cache@v4
@@ -241,22 +225,18 @@ jobs:
       github.ref == 'refs/heads/master' &&
       github.event_name == 'push' &&
       github.repository_owner == 'diejor'
-    permissions:
-      contents: write
+    permissions: { contents: write }
+
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+        with: { python-version: "3.12" }
 
       - name: Install m.css dependencies
         run: pip3 install jinja2 Pygments
 
       - name: Install Doxygen
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -y doxygen
+        run: sudo apt-get install -y doxygen
 
       - name: Build docs
         run: cmake "-DPROJECT_SOURCE_DIR=$PWD" "-DPROJECT_BINARY_DIR=$PWD/build" \
