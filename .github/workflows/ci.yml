@@ -33,16 +33,18 @@ jobs:
         run: cmake -P cmake/spell.cmake
 
   ################################################################
-  # 2) COVERAGE (Ubuntu + SwiftShader + needrestart disabled)
+  # 2) COVERAGE (Ubuntu + SwiftShader + purge needrestart)
   ################################################################
   coverage:
     needs: [ lint ]
     runs-on: ubuntu-24.04
-    env:
-      DEBIAN_FRONTEND: noninteractive
-      NEEDRESTART_MODE: a
     steps:
       - uses: actions/checkout@v4
+
+      # ← Add this
+      - name: Purge needrestart hook
+        run: sudo apt-get remove --purge -y needrestart
+
       - uses: mozilla-actions/sccache-action@v0.0.5
 
       - name: Install Vulkan loader & SwiftShader
@@ -98,17 +100,20 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   ################################################################
-  # 3) SANITIZE (Ubuntu + SwiftShader + needrestart disabled)
+  # 3) SANITIZE (Ubuntu + SwiftShader + purge needrestart)
   ################################################################
   sanitize:
     needs: [ lint ]
     runs-on: ubuntu-24.04
     env:
       CXX: clang++-18
-      DEBIAN_FRONTEND: noninteractive
-      NEEDRESTART_MODE: a
     steps:
       - uses: actions/checkout@v4
+
+      # ← Add this
+      - name: Purge needrestart hook
+        run: sudo apt-get remove --purge -y needrestart
+
       - uses: mozilla-actions/sccache-action@v0.0.5
 
       - name: Install Vulkan loader & SwiftShader
@@ -155,7 +160,7 @@ jobs:
         run: ctest --output-on-failure --no-tests=error -j 2
 
   ################################################################
-  # 4) CROSS-PLATFORM TEST MATRIX
+  # 4) CROSS-PLATFORM TEST MATRIX (Ubuntu cell + purge needrestart)
   ################################################################
   test:
     needs: [ lint ]
@@ -170,22 +175,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Ubuntu-only: disable needrestart + SwiftShader + X11
-      - name: Setup Linux GPU support
+      # Ubuntu‑only: purge needrestart + SwiftShader + X11
+      - name: Purge needrestart hook
         if: runner.os == 'Linux'
-        env:
-          DEBIAN_FRONTEND: noninteractive
-          NEEDRESTART_MODE: a
+        run: sudo apt-get remove --purge -y needrestart
+
+      - name: Install Vulkan loader & SwiftShader
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y libvulkan1 vulkan-tools libx11-dev libxrandr-dev \
-            libxi-dev libxrender-dev libxkbcommon-dev xorg-dev \
-            libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
+          sudo apt-get install -y libvulkan1 vulkan-tools
           sudo mkdir -p /usr/share/vulkan/icd.d
           sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
             https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
           sudo wget -qO /usr/lib/x86_64-linux-gnu/libVkICD_swiftshader.so \
             https://storage.googleapis.com/swiftshader/artifacts/Release/Linux/libVkICD_swiftshader.so
+
+      - name: Install X11 headers
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y \
+            libx11-dev libxrandr-dev libxi-dev libxrender-dev \
+            libxkbcommon-dev xorg-dev libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
 
       - name: Install Python
         uses: actions/setup-python@v5
@@ -231,17 +242,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-
       - name: Install m.css dependencies
         run: pip3 install jinja2 Pygments
-
       - name: Install Doxygen
         run: sudo apt-get install -y doxygen
-
       - name: Build docs
-        run: cmake "-DPROJECT_SOURCE_DIR=$PWD" "-DPROJECT_BINARY_DIR=$PWD/build" \
-             -P cmake/docs-ci.cmake
-
+        run: cmake "-DPROJECT_SOURCE_DIR=$PWD" \
+                  "-DPROJECT_BINARY_DIR=$PWD/build" \
+                  -P cmake/docs-ci.cmake
       - name: Deploy docs
         uses: peaceiris/actions-gh-pages@v4
         with:
