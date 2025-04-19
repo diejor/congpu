@@ -13,3 +13,4 @@ void computeMain(uint3 threadId : SV_DispatchThreadID)
     let index = threadId.x;
     result[index] = f(buffer0[index]);
 }
+

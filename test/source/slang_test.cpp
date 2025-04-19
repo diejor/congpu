@@ -1,57 +1,37 @@
-#include <cstdlib>
 #include <filesystem>
-#include <iostream>
 
-#include <dawn/webgpu_cpp_print.h>
-#include <tracy/Tracy.hpp>
-#include <webgpu/webgpu_cpp.h>
-#include <webgpu/webgpu_cpp_print.h>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <catch2/matchers/catch_matchers_vector.hpp>
+#include <lib.hpp>
 
-#include "lib.hpp"
-#include "logging_macros.h"
-#include "result.h"
 #include "slang_compiler.hpp"
 
-int main(int /*argc*/, char** /*argv*/)
+TEST_CASE("Simple single buffer", "[library]")
 {
-    ZoneScoped;
     Library lib;
 
     // Create the instance.
     wgpu::Instance instance = lib.CreateInstance();
-    if (instance == nullptr) {
-        return EXIT_FAILURE;
-    }
 
     // Request the adapter.
     wgpu::Adapter adapter = lib.RequestAdapter(instance);
-    if (adapter == nullptr) {
-        return EXIT_FAILURE;
-    }
 
     // Request the device.
     wgpu::Device device = lib.RequestDevice(adapter);
-    if (device == nullptr) {
-        return EXIT_FAILURE;
-    }
 
     // Get the default queue.
     wgpu::Queue queue = device.GetQueue();
 
     std::filesystem::path path(SHADERS_DIR);
-    LOG_TRACE("Loading Slang source from file: {}", path.string());
 
     std::vector<std::string> entryPoints = {"computeMain"};
     std::vector<std::string> includeDirectories = {path.string()};
 
+    // Compile the Slang source to WGSL.
     std::string wgslSource;
     auto compileResult = slang_compiler::compileSlangToWgsl(
-        "hello_world", entryPoints, includeDirectories);
-    if (isError(compileResult)) {
-        LOG_ERROR("Error compiling Slang to WGSL: {}",
-                  std::get<1>(compileResult).message);
-        return EXIT_FAILURE;
-    }
+        "single-buffer", entryPoints, includeDirectories);
     wgslSource = std::get<0>(compileResult);
 
     std::vector<float> data1 = {1.0f, 2.0f, 3.0f, 4.0f};
@@ -207,24 +187,17 @@ int main(int /*argc*/, char** /*argv*/)
 
     std::vector<float> result(data1.size());
 
-    auto mapCallback = [&mapBuffer, &result](wgpu::MapAsyncStatus status,
-                                             wgpu::StringView message)
+    auto mapCallback =
+        [&mapBuffer, &result](wgpu::MapAsyncStatus status, wgpu::StringView)
     {
         if (status == wgpu::MapAsyncStatus::Success) {
-            LOG_TRACE("Buffer mapping succeeded: {}", message);
             const float* mappedData =
                 static_cast<const float*>(mapBuffer.GetConstMappedRange(
                     0, result.size() * sizeof(float)));
-            LOG_TRACE("Mapped data: {}",
-                      reinterpret_cast<const void*>(mappedData));
             for (size_t i = 0; i < result.size(); ++i) {
                 result[i] = mappedData[i];
-                LOG_TRACE("Result[{}]: {}", i, static_cast<double>(result[i]));
             }
             mapBuffer.Unmap();
-
-        } else {
-            LOG_ERROR("Buffer mapping failed: {}", message.data);
         }
     };
     wgpu::Future handle = mapBuffer.MapAsync(wgpu::MapMode::Read,
@@ -234,9 +207,8 @@ int main(int /*argc*/, char** /*argv*/)
                                              mapCallback);
 
     instance.WaitAny(handle, UINT64_MAX);
-    LOG_TRACE("Buffer mapping completed.");
 
-    device.GetAdapter();
+    std::vector<float> expectedResult = {2.0f, 5.0f, 10.0f, 17.0f};
 
-    return EXIT_SUCCESS;
+    REQUIRE_THAT(result, Catch::Matchers::Equals(expectedResult));
 }

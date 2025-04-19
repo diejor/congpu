@@ -12,7 +12,8 @@ add_custom_target(
 )
 add_dependencies(run-exe congpu_exe)
 
-target_compile_definitions(congpu_exe PRIVATE
+target_compile_definitions(
+    congpu_exe PRIVATE
     SHADERS_DIR="${CMAKE_SOURCE_DIR}/source/shaders/"
 )
 

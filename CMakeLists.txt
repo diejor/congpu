@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 
+# option(TRACY_ENABLE "Enable Tracy profiler" ON)
+# option(TRACY_ON_DEMAND "Enable Tracy profiler on demand" ON)
+
 include(cmake/prelude.cmake)
 
 project(
@@ -56,7 +59,6 @@ find_package(dawn REQUIRED)
 
 target_link_libraries(congpu_exe PRIVATE
     congpu_lib
-    dawn::webgpu_dawn
     Tracy::TracyClient
 )
 

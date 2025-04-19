@@ -11,7 +11,10 @@ include(Catch)
 
 # ---- Tests ----
 
-add_executable(congpu_test source/congpu_test.cpp)
+add_executable(congpu_test 
+    source/lib_test.cpp
+    source/slang_test.cpp
+)
 
 copy_runtime_libs(congpu_test)
 
@@ -20,6 +23,16 @@ target_link_libraries(
     congpu_lib
     Catch2::Catch2WithMain
 )
+
+target_compile_options(congpu_test PRIVATE
+  "$<$<COMPILE_LANGUAGE:CXX>:-U TRACY_ENABLE>"
+)
+
+target_compile_definitions(congpu_test PRIVATE
+    NO_LOG
+    SHADERS_DIR="${CMAKE_SOURCE_DIR}/test/source/shaders/"
+)
+
 target_compile_features(congpu_test PRIVATE cxx_std_20)
 
 catch_discover_tests(congpu_test)

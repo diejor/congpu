@@ -4,6 +4,8 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include "webgpu//webgpu_cpp_print.h"
+
 /**
  * @brief The core implementation of the executable.
  *

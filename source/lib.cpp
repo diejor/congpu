@@ -5,7 +5,7 @@
 
 #include <tracy/Tracy.hpp>
 
-#include "webgpu//webgpu_cpp_print.h"
+#include "logging_macros.h"
 
 /// Constructs the Library and initializes the project name.
 Library::Library()
@@ -33,11 +33,11 @@ wgpu::Adapter Library::RequestAdapter(wgpu::Instance instance)
 
     auto adapterCallback = [](wgpu::RequestAdapterStatus status,
                               wgpu::Adapter _adapter,
-                              const char* message,
+                              wgpu::StringView message,
                               void* userdata)
     {
         if (status != wgpu::RequestAdapterStatus::Success) {
-            std::cerr << "Failed to get an adapter: " << message << "\n";
+            LOG_ERROR("Failed to get an adapter: {}", message);
             return;
         }
         *static_cast<wgpu::Adapter*>(userdata) = std::move(_adapter);
@@ -52,7 +52,9 @@ wgpu::Adapter Library::RequestAdapter(wgpu::Instance instance)
         UINT64_MAX);
 
     if (adapter == nullptr) {
-        std::cerr << "RequestAdapter failed!\n";
+        LOG_ERROR(
+            "RequestAdapter failed! Please check that WebGPU is supported by "
+            "your GPU.");
     }
     return adapter;
 }
@@ -63,32 +65,24 @@ wgpu::Device Library::RequestDevice(wgpu::Adapter adapter)
     wgpu::DeviceDescriptor deviceDescriptor {};
     auto errorCallback =
         [](wgpu::Device const&, wgpu::ErrorType type, wgpu::StringView message)
-    {
-        std::cerr << "Device error: " << message.data << "\n";
-        std::cerr << "Error type: " << type << "\n";
-    };
+    { LOG_ERROR("{}, {}", type, message); };
     deviceDescriptor.SetUncapturedErrorCallback(errorCallback);
 
-    auto deviceLostCallback = [](wgpu::Device const& _device,
+    auto deviceLostCallback = [](wgpu::Device const&,
                                  wgpu::DeviceLostReason reason,
                                  wgpu::StringView message)
-    {
-        (void)_device;    // Suppress unused variable warning.
-        std::cerr << "Device lost: " << message.data << "\n";
-        std::cerr << "Reason: " << reason << "\n";
-    };
+    { LOG_ERROR("{}, {}", reason, message); };
     deviceDescriptor.SetDeviceLostCallback(wgpu::CallbackMode::WaitAnyOnly,
                                            deviceLostCallback);
     wgpu::Device device = nullptr;
 
-    // Callback to capture the device from the asynchronous request.
     auto deviceCallback = [](wgpu::RequestDeviceStatus status,
                              wgpu::Device _device,
                              const char* message,
                              void* userdata)
     {
         if (status != wgpu::RequestDeviceStatus::Success) {
-            std::cerr << "Failed to get a device: " << message << "\n";
+            LOG_ERROR("Failed to get a device: {}", message);
             return;
         }
         *static_cast<wgpu::Device*>(userdata) = std::move(_device);
@@ -97,7 +91,6 @@ wgpu::Device Library::RequestDevice(wgpu::Adapter adapter)
     auto deviceCallbackMode = wgpu::CallbackMode::WaitAnyOnly;
     void* deviceUserdata = &device;
 
-    // Initiate the device request and wait synchronously.
     adapter.GetInstance().WaitAny(adapter.RequestDevice(&deviceDescriptor,
                                                         deviceCallbackMode,
                                                         deviceCallback,
@@ -105,7 +98,7 @@ wgpu::Device Library::RequestDevice(wgpu::Adapter adapter)
                                   UINT64_MAX);
 
     if (device == nullptr) {
-        std::cerr << "RequestDevice failed!\n";
+        LOG_ERROR("RequestDevice failed! Not sure why.");
     }
     return device;
 }

@@ -8,6 +8,8 @@
 #include <slang.h>
 #include <tracy/Tracy.hpp>
 
+#include "logging_macros.h"
+
 using namespace slang_compiler;
 
 /**
@@ -86,14 +88,13 @@ Result<ModuleInfo, Error> loadSlangModule(
     Slang::ComPtr<slang::IBlob> diagnostics;
     slang::IModule* module =
         session->loadModule(moduleName.c_str(), diagnostics.writeRef());
-    std::cout << "Loaded module '" << moduleName << "'\n";
-    if (diagnostics) {
+    LOG_TRACE("Loaded module: {}", moduleName);
+    if (diagnostics != nullptr) {
         std::string message =
             reinterpret_cast<const char*>(diagnostics->getBufferPointer());
         return Error {"Could not load slang module '" + moduleName + "':\n"
                       + message};
     }
-    std::cout << "Loaded module, diagnostics: '" << diagnostics << "'\n";
 
     // Gather dependency files if any.
     size_t depCount = static_cast<size_t>(module->getDependencyFileCount());

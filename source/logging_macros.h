@@ -1,128 +1,140 @@
 #pragma once
 
-#include <cstdio>
-#include <cstdarg>
-#include <cstring>
+#include <cstdint>    // uint32_t
+#include <cstdio>    // std::FILE*
+#include <source_location>    // std::source_location::current()
 
-// ---------------------------------------------------------------------
-// Log Levels
-// ---------------------------------------------------------------------
-enum LogLevel {
-    LL_NONE = 0,
-    LL_ERROR,
-    LL_WARN,
-    LL_INFO,
-    LL_TRACE
+#include <fmt/format.h>
+#include <fmt/ostream.h>    // for operator<< fall‑back
+
+#ifdef TRACY_ENABLE
+#    include <tracy/Tracy.hpp>
+#endif
+
+#include <webgpu/webgpu_cpp.h>
+#include <webgpu/webgpu_cpp_print.h>
+
+enum class LogLevel
+{
+    Error = 0,
+    Warn,
+    Info,
+    Trace
 };
+inline constexpr LogLevel kMinCompileTimeLevel = LogLevel::Trace;
 
-// Human-readable strings for log levels (must match enum order).
-static const char *LOG_LEVEL_STR[] = {
-    "NONE",
-    "ERROR",
-    "WARN",
-    "INFO",
-    "TRACE"
+inline constexpr const char* LOG_COLORS[] = {
+    "\033[0;31m",    // Error
+    "\033[0;33m",    // Warn
+    "\033[0;37m",    // Info
+    "\033[0;90m"    // Trace
 };
+inline constexpr const char* RESET_COLOR = "\033[0m";
 
-// ---------------------------------------------------------------------
-// Logger struct (holds output stream & minimum level)
-// ---------------------------------------------------------------------
-struct Logger {
-    FILE *stream;  // e.g., stdout or stderr
-    int  level;    // e.g., LL_INFO, LL_WARN, etc.
-};
-
-// Default logger instance: writes to stdout at LL_TRACE level.
-static Logger DEFAULT_LOGGER = { stdout, LL_TRACE };
-
-// Helper: set the level of the default logger at runtime.
-inline void setLogLevel(int level) {
-    DEFAULT_LOGGER.level = level;
+inline constexpr std::string_view level_name(LogLevel L) noexcept
+{
+    switch (L) {
+        case LogLevel::Error:
+            return "ERROR";
+        case LogLevel::Warn:
+            return "WARN";
+        case LogLevel::Info:
+            return "INFO";
+        case LogLevel::Trace:
+            return "TRACE";
+    }
+    return "UNKNOWN";
 }
 
-// ---------------------------------------------------------------------
-// Optional ANSI color codes (customize as you like)
-// ---------------------------------------------------------------------
-static const char *LOG_COLORS[] = {
-    "\033[0m",     // LL_NONE  - no color
-    "\033[0;31m",  // LL_ERROR - red
-    "\033[0;33m",  // LL_WARN  - yellow
-    "\033[0;37m",  // LL_INFO  - white
-    "\033[0;90m",  // LL_TRACE - gray
-};
-static const char *RESET_COLOR = "\033[0m";
-
-// ---------------------------------------------------------------------
-// Macros for Logging
-// ---------------------------------------------------------------------
-#ifdef NO_LOG
-
-// If NO_LOG is defined, strip out all logging calls at compile time.
-#define LOG(logger, level, fmt, ...) (void)0
-#define LOG_ERROR(fmt, ...)         (void)0
-#define LOG_WARN(fmt, ...)          (void)0
-#define LOG_INFO(fmt, ...)          (void)0
-#define LOG_TRACE(fmt, ...)         (void)0
-
-// Also disable the error macro.
-#define ERR(cond, fmt, ...)         \
-    do {                            \
-        if (cond) {               \
-            return;               \
-        }                         \
-    } while (0)
-
+#ifdef TRACY_ENABLE
+template<LogLevel L>
+inline void tracy_emit(const char* txt, size_t sz)
+{
+    constexpr uint32_t cols[] = {0xFF0000u, 0xFFAA00u, 0xFFFFFFu, 0xAAAAAAu};
+    tracy::Profiler::MessageColor(txt, sz, cols[static_cast<int>(L)], 0);
+}
 #else
+template<LogLevel>
+inline constexpr void tracy_emit(const char*, size_t) noexcept
+{
+}
+#endif
 
-#define LOG(logger, logLevel, fmt, ...)                                           \
-    do {                                                                        \
-        if ((logLevel) <= (logger).level) {                                     \
-            constexpr int BUF_SIZE = 1024;                                      \
-            char _log_buf[BUF_SIZE];                                            \
-            std::snprintf(_log_buf, BUF_SIZE, fmt __VA_OPT__(, __VA_ARGS__));     \
-            TracyMessage(_log_buf, strlen(_log_buf));  /* Send message to Tracy */\
-            std::fprintf((logger).stream,                                     \
-                         "%s[%s:%d %s()][%s]%s %s\n",                         \
-                         LOG_COLORS[logLevel], __FILE__, __LINE__, __func__,    \
-                         LOG_LEVEL_STR[logLevel], RESET_COLOR, _log_buf);        \
-        }                                                                       \
-    } while (0)
+namespace detail
+{
+template<LogLevel L, typename... Args>
+inline void sink(std::FILE* stream,
+                 std::string_view fmtStr,
+                 const std::source_location& loc,
+                 Args&&... args)
+{
+    if constexpr (L > kMinCompileTimeLevel) {
+        return;
+    }
+    auto msg = fmt::vformat(fmtStr, fmt::make_format_args(args...));
+    tracy_emit<L>(msg.c_str(), msg.size());
+    fmt::print(stream,
+               "{}[{}:{} {}()][{}]{} {}\n",
+               LOG_COLORS[static_cast<int>(L)],
+               loc.file_name(),
+               loc.line(),
+               loc.function_name(),
+               level_name(L),
+               RESET_COLOR,
+               msg);
+}
+}    // namespace detail
 
+#ifdef NO_LOG
+#    define LOG_ERROR(...) ((void)0)
+#    define LOG_WARN(...) ((void)0)
+#    define LOG_INFO(...) ((void)0)
+#    define LOG_TRACE(...) ((void)0)
+#else
+#    define LOG_ERROR(fmt, ...) \
+        ::detail::sink<LogLevel::Error>(stdout, \
+                                        fmt, \
+                                        std::source_location::current() \
+                                            __VA_OPT__(, __VA_ARGS__))
+#    define LOG_WARN(fmt, ...) \
+        ::detail::sink<LogLevel::Warn>(stdout, \
+                                       fmt, \
+                                       std::source_location::current() \
+                                           __VA_OPT__(, __VA_ARGS__))
+#    define LOG_INFO(fmt, ...) \
+        ::detail::sink<LogLevel::Info>(stdout, \
+                                       fmt, \
+                                       std::source_location::current() \
+                                           __VA_OPT__(, __VA_ARGS__))
+#    define LOG_TRACE(fmt, ...) \
+        ::detail::sink<LogLevel::Trace>(stdout, \
+                                        fmt, \
+                                        std::source_location::current() \
+                                            __VA_OPT__(, __VA_ARGS__))
+#endif
 
-#define LOG_ERROR(fmt, ...)  LOG(DEFAULT_LOGGER, LL_ERROR, fmt __VA_OPT__(, __VA_ARGS__))
-#define LOG_WARN(fmt, ...)   LOG(DEFAULT_LOGGER, LL_WARN,  fmt __VA_OPT__(, __VA_ARGS__))
-#define LOG_INFO(fmt, ...)   LOG(DEFAULT_LOGGER, LL_INFO,  fmt __VA_OPT__(, __VA_ARGS__))
-#define LOG_TRACE(fmt, ...)  LOG(DEFAULT_LOGGER, LL_TRACE, fmt __VA_OPT__(, __VA_ARGS__))
+namespace fmt
+{
 
-/**
- * ERR:
- *
- * If the condition is true, logs an error message at LL_ERROR level (including the
- * stringized condition) and returns from the function.
- *
- * Usage:
- *     ERR(val < 0, "Invalid negative value: %d", val);
- */
-#define ERR(cond, fmt, ...)                                                     \
-    do {                                                                        \
-        if ((cond)) {                                                           \
-            LOG(DEFAULT_LOGGER, LL_ERROR, "Condition \"%s\" is true. " fmt __VA_OPT__(, __VA_ARGS__), #cond); \
-            return;                                                           \
-        }                                                                       \
-    } while (0)
+template<>
+struct formatter<wgpu::StringView> : formatter<std::string_view>
+{
+    constexpr auto parse(format_parse_context& ctx)
+    {
+        return formatter<std::string_view>::parse(ctx);
+    }
 
-/**
- * WARN_COND:
- *
- * If the condition is true, logs a warning message at LL_WARN level (including the
- * stringized condition) but does not return.
- */
-#define WARN_COND(cond, fmt, ...)                                               \
-    do {                                                                        \
-        if ((cond)) {                                                           \
-            LOG(DEFAULT_LOGGER, LL_WARN, "Condition \"%s\" is true. " fmt __VA_OPT__(, __VA_ARGS__), #cond); \
-        }                                                                       \
-    } while (0)
+    auto format(wgpu::StringView const& sv, format_context& ctx) const
+    {
+        return formatter<std::string_view>::format(
+            static_cast<std::string_view>(sv), ctx);
+    }
+};
 
-#endif // NO_LOG
+template<typename T>
+    requires std::is_enum_v<T>
+struct formatter<T> : ostream_formatter
+{
+};
 
+}    // namespace fmt
