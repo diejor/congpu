@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Keep Conan / conan_toolchain incremental
+  # Keep Conan packages in ~/.conan2 for incremental caching
   CONAN_USER_HOME: ${{ github.workspace }}/.conan2
 
 jobs:
@@ -47,11 +47,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: mozilla-actions/sccache-action@v0.0.5
 
-      - name: Install Vulkan loader & SwiftShader (headless GPU)
+      # REMOVE needrestart so its hook never fails
+      - name: Purge needrestart hook
+        run: sudo apt-get remove --purge -y needrestart
+
+      - name: Install Vulkan loader & SwiftShader
         run: |
-          sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -q
-          sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y \
-            libvulkan1 vulkan-tools
+          sudo apt-get update -q
+          sudo apt-get install -y libvulkan1 vulkan-tools
           sudo mkdir -p /usr/share/vulkan/icd.d
           sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
             https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
@@ -59,12 +62,11 @@ jobs:
             https://storage.googleapis.com/swiftshader/artifacts/Release/Linux/libVkICD_swiftshader.so
 
       - name: Install LCov
-        run: |
-          sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y lcov
+        run: sudo apt-get install -y lcov
 
       - name: Install X11 headers
         run: |
-          sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y \
+          sudo apt-get install -y \
             libx11-dev libxrandr-dev libxi-dev libxrender-dev \
             libxkbcommon-dev xorg-dev libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
 
@@ -114,11 +116,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: mozilla-actions/sccache-action@v0.0.5
 
-      - name: Install Vulkan loader & SwiftShader (headless GPU)
+      - name: Purge needrestart hook
+        run: sudo apt-get remove --purge -y needrestart
+
+      - name: Install Vulkan loader & SwiftShader
         run: |
-          sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -q
-          sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y \
-            libvulkan1 vulkan-tools
+          sudo apt-get update -q
+          sudo apt-get install -y libvulkan1 vulkan-tools
           sudo mkdir -p /usr/share/vulkan/icd.d
           sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
             https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
@@ -127,7 +131,7 @@ jobs:
 
       - name: Install X11 headers
         run: |
-          sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y \
+          sudo apt-get install -y \
             libx11-dev libxrandr-dev libxi-dev libxrender-dev \
             libxkbcommon-dev xorg-dev libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
 
@@ -160,7 +164,7 @@ jobs:
         run: ctest --output-on-failure --no-tests=error -j 2
 
   ################################################################
-  # 4) CROSS‑PLATFORM TEST MATRIX (with SwiftShader on Linux)
+  # 4) CROSS-PLATFORM TEST MATRIX (with SwiftShader on Linux)
   ################################################################
   test:
     needs: [ lint ]
@@ -175,16 +179,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Linux only: speed + headless Vulkan + X11
-      - if: runner.os == 'Linux'
-        uses: mozilla-actions/sccache-action@v0.0.5
+      # Ubuntu only: purge needrestart + SwiftShader + X11
+      - name: Purge needrestart hook
+        if: runner.os == 'Linux'
+        run: sudo apt-get remove --purge -y needrestart
 
       - name: Install Vulkan loader & SwiftShader
         if: runner.os == 'Linux'
         run: |
-          sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -q
-          sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y \
-            libvulkan1 vulkan-tools
+          sudo apt-get update -q
+          sudo apt-get install -y libvulkan1 vulkan-tools
           sudo mkdir -p /usr/share/vulkan/icd.d
           sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
             https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
@@ -194,7 +198,7 @@ jobs:
       - name: Install X11 headers
         if: runner.os == 'Linux'
         run: |
-          sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y \
+          sudo apt-get install -y \
             libx11-dev libxrandr-dev libxi-dev libxrender-dev \
             libxkbcommon-dev xorg-dev libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
 
@@ -235,7 +239,7 @@ jobs:
     runs-on: ubuntu-24.04
     if: |
       github.ref == 'refs/heads/master' &&
-      github.event_name == 'push'       &&
+      github.event_name == 'push' &&
       github.repository_owner == 'diejor'
     permissions:
       contents: write
@@ -251,8 +255,8 @@ jobs:
 
       - name: Install Doxygen
         run: |
-          sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -q
-          sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y doxygen
+          sudo apt-get update -q
+          sudo apt-get install -y doxygen
 
       - name: Build docs
         run: cmake "-DPROJECT_SOURCE_DIR=$PWD" "-DPROJECT_BINARY_DIR=$PWD/build" \
