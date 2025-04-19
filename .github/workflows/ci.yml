@@ -1,73 +1,56 @@
 name: Continuous Integration
 
-# Cancel superseded runs on the same branch/PR
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
-  cancel-in-progress: true
-
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
 
-# Keep Conan cache here
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
 env:
+  # Keep Conan cache incremental
   CONAN_USER_HOME: ${{ github.workspace }}/.conan2
 
 jobs:
-  ################################################################
-  # LINT JOB
-  ################################################################
   lint:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-
       - name: Install codespell
         run: pip3 install codespell
-
       - name: Lint
         run: cmake -D FORMAT_COMMAND=clang-format-18 -P cmake/lint.cmake
-
       - name: Spell check
         if: always()
         run: cmake -P cmake/spell.cmake
 
-  ################################################################
-  # COVERAGE JOB
-  ################################################################
   coverage:
     needs: [ lint ]
     runs-on: ubuntu-24.04
-
     steps:
       - uses: actions/checkout@v4
 
       # Speed up rebuilds on Linux
       - uses: mozilla-actions/sccache-action@v0.0.5
 
-      # ───────────────────────────────────────────────
-      # Anchor the SwiftShader install into &install_vulkan
-      # ───────────────────────────────────────────────
-      - &install_vulkan
-        name: Install Vulkan loader & SwiftShader
-        if: runner.os == 'Linux'
+      # Install Vulkan loader + SwiftShader ICD so Dawn's Vulkan backend works
+      - name: Install Vulkan loader & SwiftShader
         run: |
           sudo apt-get update -q
           sudo apt-get install -y libvulkan1 vulkan-utils
-
           sudo mkdir -p /usr/share/vulkan/icd.d
           sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
-               https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
+            https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
           sudo wget -qO /usr/lib/x86_64-linux-gnu/libVkICD_swiftshader.so \
-               https://storage.googleapis.com/swiftshader/artifacts/Release/Linux/libVkICD_swiftshader.so
+            https://storage.googleapis.com/swiftshader/artifacts/Release/Linux/libVkICD_swiftshader.so
 
       - name: Install LCov
-        run: sudo apt-get update -q && sudo apt-get install -y lcov
-
+        run: sudo apt-get install -y lcov
       - name: Install X11 headers
         run: sudo apt-get install -y libx11-dev libxrandr-dev libxi-dev \
              libxrender-dev libxkbcommon-dev xorg-dev libx11-xcb-dev \
@@ -89,42 +72,41 @@ jobs:
 
       - name: Configure
         run: cmake --preset=ci-coverage
-
       - name: Build
         run: cmake --build build/coverage -j 2
-
       - name: Test
         working-directory: build/coverage
         run: ctest --output-on-failure --no-tests=error -j 2
-
       - name: Process coverage info
         run: cmake --build build/coverage -t coverage
-
       - name: Submit to codecov.io
         uses: codecov/codecov-action@v4
         with:
           file: build/coverage/coverage.info
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  ################################################################
-  # SANITIZE JOB
-  ################################################################
   sanitize:
     needs: [ lint ]
     runs-on: ubuntu-24.04
     env: { CXX: clang++-18 }
-
     steps:
       - uses: actions/checkout@v4
       - uses: mozilla-actions/sccache-action@v0.0.5
 
-      # Re‑use the exact same steps from &install_vulkan
-      - *install_vulkan
+      - name: Install Vulkan loader & SwiftShader
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y libvulkan1 vulkan-utils
+          sudo mkdir -p /usr/share/vulkan/icd.d
+          sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
+            https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
+          sudo wget -qO /usr/lib/x86_64-linux-gnu/libVkICD_swiftshader.so \
+            https://storage.googleapis.com/swiftshader/artifacts/Release/Linux/libVkICD_swiftshader.so
 
       - name: Install X11 headers
-        run: sudo apt-get update -q && sudo apt-get install -y libx11-dev \
-             libxrandr-dev libxi-dev libxrender-dev libxkbcommon-dev xorg-dev \
-             libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
+        run: sudo apt-get install -y libx11-dev libxrandr-dev libxi-dev \
+             libxrender-dev libxkbcommon-dev xorg-dev libx11-xcb-dev \
+             libxcb1-dev libxcb-keysyms1-dev
 
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
@@ -142,10 +124,8 @@ jobs:
 
       - name: Configure
         run: cmake --preset=ci-sanitize
-
       - name: Build
         run: cmake --build build/sanitize -j 2
-
       - name: Test
         working-directory: build/sanitize
         env:
@@ -153,9 +133,6 @@ jobs:
           UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
         run: ctest --output-on-failure --no-tests=error -j 2
 
-  ################################################################
-  # CROSS‑PLATFORM TEST MATRIX (Debug/Release on Mac/Linux/Win)
-  ################################################################
   test:
     needs: [ lint ]
     strategy:
@@ -169,16 +146,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Linux only: speed + Vulkan driver + X11
       - if: matrix.os == 'ubuntu-24.04'
         uses: mozilla-actions/sccache-action@v0.0.5
       - if: matrix.os == 'ubuntu-24.04'
-        *install_vulkan
+        name: Install Vulkan loader & SwiftShader
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y libvulkan1 vulkan-utils
+          sudo mkdir -p /usr/share/vulkan/icd.d
+          sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
+            https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
+          sudo wget -qO /usr/lib/x86_64-linux-gnu/libVkICD_swiftshader.so \
+            https://storage.googleapis.com/swiftshader/artifacts/Release/Linux/libVkICD_swiftshader.so
+
       - if: matrix.os == 'ubuntu-24.04'
         name: Install X11 headers
-        run: sudo apt-get update -q && sudo apt-get install -y libx11-dev \
-             libxrandr-dev libxi-dev libxrender-dev libxkbcommon-dev xorg-dev \
-             libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
+        run: sudo apt-get install -y libx11-dev libxrandr-dev libxi-dev \
+             libxrender-dev libxkbcommon-dev xorg-dev libx11-xcb-dev \
+             libxcb1-dev libxcb-keysyms1-dev
 
       - name: Install Python
         uses: actions/setup-python@v5
@@ -200,17 +185,12 @@ jobs:
 
       - name: Build
         run: cmake --build build --config Release -j 2
-
       - name: Install
         run: cmake --install build --config Release --prefix prefix
-
       - name: Test
         working-directory: build
         run: ctest --output-on-failure --no-tests=error -C Release -j 2
 
-  ################################################################
-  # DOCS JOB 
-  ################################################################
   docs:
     needs: [ sanitize, test ]
     runs-on: ubuntu-24.04
@@ -223,18 +203,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-
       - name: Install m.css dependencies
         run: pip3 install jinja2 Pygments
-
       - name: Install Doxygen
         run: sudo apt-get update -q && sudo apt-get install -y doxygen
-
       - name: Build docs
         run: cmake "-DPROJECT_SOURCE_DIR=$PWD" \
                   "-DPROJECT_BINARY_DIR=$PWD/build" \
                   -P cmake/docs-ci.cmake
-
       - name: Deploy docs
         uses: peaceiris/actions-gh-pages@v4
         with:
