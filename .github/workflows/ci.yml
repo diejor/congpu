@@ -95,8 +95,8 @@ jobs:
 
       - name: Install Vulkan loader & SwiftShader
         run: |
-          sudo apt-get update -q
-          sudo apt-get install -y libvulkan1 vulkan-utils
+          sudo NEEDRESTART_SUSPEND=1 apt-get update -q
+          sudo NEEDRESTART_SUSPEND=1 apt-get install -y libvulkan1 vulkan-tools
           sudo mkdir -p /usr/share/vulkan/icd.d
           sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
             https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
@@ -104,7 +104,7 @@ jobs:
             https://storage.googleapis.com/swiftshader/artifacts/Release/Linux/libVkICD_swiftshader.so
 
       - name: Install X11 headers
-        run: sudo apt-get install -y libx11-dev libxrandr-dev libxi-dev \
+        run: sudo NEEDRESTART_SUSPEND=1 apt-get install -y libx11-dev libxrandr-dev libxi-dev \
              libxrender-dev libxkbcommon-dev xorg-dev libx11-xcb-dev \
              libxcb1-dev libxcb-keysyms1-dev
 
@@ -151,8 +151,8 @@ jobs:
       - if: matrix.os == 'ubuntu-24.04'
         name: Install Vulkan loader & SwiftShader
         run: |
-          sudo apt-get update -q
-          sudo apt-get install -y libvulkan1 vulkan-utils
+          sudo N apt-get update -q
+          sudo NEEDRESTART_SUSPEND=1 apt-get install -y libvulkan1 vulkan-tools
           sudo mkdir -p /usr/share/vulkan/icd.d
           sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
             https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
@@ -161,7 +161,7 @@ jobs:
 
       - if: matrix.os == 'ubuntu-24.04'
         name: Install X11 headers
-        run: sudo apt-get install -y libx11-dev libxrandr-dev libxi-dev \
+        run: sudo NEEDRESTART_SUSPEND=1 apt-get install -y libx11-dev libxrandr-dev libxi-dev \
              libxrender-dev libxkbcommon-dev xorg-dev libx11-xcb-dev \
              libxcb1-dev libxcb-keysyms1-dev
 
