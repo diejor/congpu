@@ -1,236 +1,238 @@
 name: Continuous Integration
 
+# ─────────────────────────────────────────────────────────────
+# Cancel superseded runs (same branch / PR) to save minutes
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+# ─────────────────────────────────────────────────────────────
+
 on:
   push:
-    branches:
-    - master
-
+    branches: [ master ]
   pull_request:
-    branches:
-    - master
+    branches: [ master ]
 
+###############################################################################
+# A reusable step for Ubuntu jobs: install Vulkan loader + SwiftShader ICD
+###############################################################################
+defaults:
+  run:
+    shell: bash
+
+###############################################################################
+# Installs libvulkan + SwiftShader ICD only on Ubuntu
+###############################################################################
+steps-install-vulkan: &install-vulkan
+  - name: Install Vulkan loader & SwiftShader (head‑less GPU driver)
+    if: runner.os == 'Linux'
+    run: |
+      sudo apt-get update -q
+      sudo apt-get install -y libvulkan1 vulkan-utils
+
+      # --- SwiftShader ICD (≈40 MB) -----------------------------------------
+      sudo mkdir -p /usr/share/vulkan/icd.d
+      sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
+           https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
+      sudo wget -qO /usr/lib/x86_64-linux-gnu/libVkICD_swiftshader.so \
+           https://storage.googleapis.com/swiftshader/artifacts/Release/Linux/libVkICD_swiftshader.so
+      echo "SwiftShader installed → $(vulkaninfo --summary | head -n 5)"
+
+###############################################################################
+# Global env – keep Conan packages in ~/.conan2 so cache can be incremental
+###############################################################################
+env:
+  CONAN_USER_HOME: ${{ github.workspace }}/.conan2
+
+###############################################################################
+# LINT JOB
+###############################################################################
 jobs:
   lint:
     runs-on: ubuntu-24.04
-
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
 
-    - uses: actions/setup-python@v5
-      with: { python-version: "3.12" }
+      - name: Install codespell
+        run: pip3 install codespell
 
-    - name: Install codespell
-      run: pip3 install codespell
+      - name: Lint
+        run: cmake -D FORMAT_COMMAND=clang-format-18 -P cmake/lint.cmake
 
-    - name: Lint
-      run: cmake -D FORMAT_COMMAND=clang-format-18 -P cmake/lint.cmake
+      - name: Spell check
+        if: always()
+        run: cmake -P cmake/spell.cmake
 
-    - name: Spell check
-      if: always()
-      run: cmake -P cmake/spell.cmake
-
+###############################################################################
+# COVERAGE =
+###############################################################################
   coverage:
-    needs: [lint]
-
+    needs: [ lint ]
     runs-on: ubuntu-24.04
-
     if: github.repository_owner == 'diejor'
-
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: mozilla-actions/sccache-action@v0.0.5
+      - *install-vulkan                      # ← new
+      - name: Install LCov
+        run: sudo apt-get update -q && sudo apt-get install -y lcov
+      - name: Install X11 headers
+        run: sudo apt-get install -y libx11-dev libxrandr-dev libxi-dev \
+             libxrender-dev libxkbcommon-dev xorg-dev libx11-xcb-dev \
+             libxcb1-dev libxcb-keysyms1-dev
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
 
-    - name: Install LCov
-      run: |
-        sudo apt-get update -q
-        sudo apt-get install lcov -q -y
+      - name: Conan cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-coverage-${{ hashFiles('conan*.[pl][yo]*') }}
 
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update -q
-        sudo apt-get install libx11-dev libxrandr-dev libxi-dev libxrender-dev libxkbcommon-dev xorg-dev libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
+      - name: Install dependencies
+        run: |
+          chmod +x .github/scripts/conan-ci-setup.sh
+          .github/scripts/conan-ci-setup.sh
 
+      - name: Configure
+        run: cmake --preset=ci-coverage
+      - name: Build
+        run: cmake --build build/coverage -j 2
+      - name: Test
+        working-directory: build/coverage
+        run: ctest --output-on-failure --no-tests=error -j 2
+      - name: Process coverage info
+        run: cmake --build build/coverage -t coverage
+      - name: Submit to codecov.io
+        uses: codecov/codecov-action@v4
+        with:
+          file: build/coverage/coverage.info
+          token: ${{ secrets.CODECOV_TOKEN }}
 
-    - name: Install Python
-      uses: actions/setup-python@v5
-      with: { python-version: "3.12" }
-
-    - name: Conan cache
-      uses: actions/cache@v4
-      with:
-        path: conan_cache_save.tgz
-        key: conan-coverage-${{ hashFiles('conan*.[pl][yo]*') }}
-
-    - name: Install dependencies
-      run: |
-        chmod +x .github/scripts/conan-ci-setup.sh
-        .github/scripts/conan-ci-setup.sh
-
-    - name: Configure
-      run: cmake --preset=ci-coverage
-
-    - name: Build
-      run: cmake --build build/coverage -j 2
-
-    - name: Test
-      working-directory: build/coverage
-      run: ctest --output-on-failure --no-tests=error -j 2
-
-    - name: Process coverage info
-      run: cmake --build build/coverage -t coverage
-
-    - name: Submit to codecov.io
-      uses: codecov/codecov-action@v4
-      with:
-        file: build/coverage/coverage.info
-        token: ${{ secrets.CODECOV_TOKEN }}
-
+###############################################################################
+# SANITIZE 
+###############################################################################
   sanitize:
-    needs: [lint]
-
+    needs: [ lint ]
     runs-on: ubuntu-24.04
-
     env: { CXX: clang++-18 }
-
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: mozilla-actions/sccache-action@v0.0.5
+      - *install-vulkan
+      - name: Install X11 headers
+        run: sudo apt-get update -q && sudo apt-get install -y libx11-dev \
+             libxrandr-dev libxi-dev libxrender-dev libxkbcommon-dev xorg-dev \
+             libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
 
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update -q
-        sudo apt-get install libx11-dev libxrandr-dev libxi-dev libxrender-dev libxkbcommon-dev xorg-dev libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
+      - name: Conan cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-sanitize-${{ hashFiles('conan*.[pl][yo]*') }}
 
-    - name: Install Python
-      uses: actions/setup-python@v5
-      with: { python-version: "3.12" }
+      - name: Install dependencies
+        run: |
+          chmod +x .github/scripts/conan-ci-setup.sh
+          .github/scripts/conan-ci-setup.sh
 
-    - name: Conan cache
-      uses: actions/cache@v4
-      with:
-        path: conan_cache_save.tgz
-        key: conan-sanitize-${{ hashFiles('conan*.[pl][yo]*') }}
+      - name: Configure
+        run: cmake --preset=ci-sanitize
+      - name: Build
+        run: cmake --build build/sanitize -j 2
+      - name: Test
+        working-directory: build/sanitize
+        env:
+          ASAN_OPTIONS: "detect_leaks=1:halt_on_error=1"
+          UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
+        run: ctest --output-on-failure --no-tests=error -j 2
 
-    - name: Install dependencies
-      run: |
-        chmod +x .github/scripts/conan-ci-setup.sh
-        .github/scripts/conan-ci-setup.sh
-
-    - name: Configure
-      run: cmake --preset=ci-sanitize
-
-    - name: Build
-      run: cmake --build build/sanitize -j 2
-
-    - name: Test
-      working-directory: build/sanitize
-      env:
-        ASAN_OPTIONS: "strict_string_checks=1:\
-          detect_stack_use_after_return=1:\
-          check_initialization_order=1:\
-          strict_init_order=1:\
-          detect_leaks=1:\
-          halt_on_error=1"
-        UBSAN_OPTIONS: "print_stacktrace=1:\
-          halt_on_error=1"
-      run: ctest --output-on-failure --no-tests=error -j 2
-
+###############################################################################
+# CROSS‑PLATFORM RELEASE TEST MATRIX
+###############################################################################
   test:
-    needs: [lint]
-
+    needs: [ lint ]
     strategy:
       matrix:
-        os: [macos-14, ubuntu-24.04, windows-2022]
-
+        os: [ macos-14, ubuntu-24.04, windows-2022 ]
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Linux‑only deps + Vulkan driver
+      - if: matrix.os == 'ubuntu-24.04'
+        uses: mozilla-actions/sccache-action@v0.0.5
+      - if: matrix.os == 'ubuntu-24.04'
+        *install-vulkan
+      - if: matrix.os == 'ubuntu-24.04'
+        name: Install X11 headers
+        run: sudo apt-get update -q && sudo apt-get install -y libx11-dev \
+             libxrandr-dev libxi-dev libxrender-dev libxkbcommon-dev xorg-dev \
+             libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
+
+      # Static analyzers for Linux
+      - name: Install static analyzers
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          sudo apt-get install clang-tidy-18 cppcheck -y -q
+          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy \
+               /usr/bin/clang-tidy-18 180
+
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+
+      - name: Conan cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-${{ matrix.os }}-${{ hashFiles('conan*.[pl][yo]*') }}
+
+      - name: Install dependencies
+        run: |
+          chmod +x .github/scripts/conan-ci-setup.sh
+          .github/scripts/conan-ci-setup.sh
+
+      - name: Configure
         shell: bash
+        run: cmake --preset=ci-${{ matrix.os == 'ubuntu-24.04' && 'ubuntu' || (matrix.os == 'macos-14' && 'macos' || 'windows') }}
+      - name: Build
+        run: cmake --build build --config Release -j 2
+      - name: Install
+        run: cmake --install build --config Release --prefix prefix
+      - name: Test
+        working-directory: build
+        run: ctest --output-on-failure --no-tests=error -C Release -j 2
 
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install X11 dependencies on Ubuntu
-      if: matrix.os == 'ubuntu-24.04'
-      run: |
-        sudo apt-get update -q
-        sudo apt-get install libx11-dev libxrandr-dev libxi-dev libxrender-dev libxkbcommon-dev xorg-dev libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
-
-    - name: Install static analyzers
-      if: matrix.os == 'ubuntu-24.04'
-      run: >-
-        sudo apt-get install clang-tidy-18 cppcheck -y -q
-
-        sudo update-alternatives --install
-        /usr/bin/clang-tidy clang-tidy
-        /usr/bin/clang-tidy-18 180
-
-    - name: Install Python
-      uses: actions/setup-python@v5
-      with: { python-version: "3.12" }
-
-    - name: Conan cache
-      uses: actions/cache@v4
-      with:
-        path: conan_cache_save.tgz
-        key: conan-${{ matrix.os }}-${{ hashFiles('conan*.[pl][yo]*') }}
-
-    - name: Install dependencies
-      run: |
-        chmod +x .github/scripts/conan-ci-setup.sh
-        .github/scripts/conan-ci-setup.sh
-
-    - name: Setup MultiToolTask
-      if: matrix.os == 'windows-2022'
-      shell: pwsh
-      run: |
-        Add-Content "$env:GITHUB_ENV" 'UseMultiToolTask=true'
-        Add-Content "$env:GITHUB_ENV" 'EnforceProcessCountAcrossBuilds=true'
-
-    - name: Configure
-      shell: pwsh
-      run: cmake "--preset=ci-$("${{ matrix.os }}".split("-")[0])"
-
-    - name: Build
-      run: cmake --build build --config Release -j 2
-
-    - name: Install
-      run: cmake --install build --config Release --prefix prefix
-
-    - name: Test
-      working-directory: build
-      run: ctest --output-on-failure --no-tests=error -C Release -j 2
-
+###############################################################################
+# DOCS JOB 
+###############################################################################
   docs:
-    needs: [sanitize, test]
-
+    needs: [ sanitize, test ]
     runs-on: ubuntu-24.04
-
-    if: github.ref == 'refs/heads/master'
-      && github.event_name == 'push'
-      && github.repository_owner == 'diejor'
-
-    permissions:
-      contents: write
-
+    if: github.ref == 'refs/heads/master' &&
+        github.event_name == 'push'       &&
+        github.repository_owner == 'diejor'
+    permissions: { contents: write }
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Install m.css dependencies
+        run: pip3 install jinja2 Pygments
+      - name: Install Doxygen
+        run: sudo apt-get update -q && sudo apt-get install -y doxygen
+      - name: Build docs
+        run: cmake "-DPROJECT_SOURCE_DIR=$PWD" \
+                  "-DPROJECT_BINARY_DIR=$PWD/build" \
+                  -P cmake/docs-ci.cmake
+      - name: Deploy docs
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/docs/html
 
-    - uses: actions/setup-python@v5
-      with: { python-version: "3.12" }
-
-    - name: Install m.css dependencies
-      run: pip3 install jinja2 Pygments
-
-    - name: Install Doxygen
-      run: |
-        sudo apt-get update -q
-        sudo apt-get install doxygen -q -y
-
-    - name: Build docs
-      run: cmake "-DPROJECT_SOURCE_DIR=$PWD" "-DPROJECT_BINARY_DIR=$PWD/build"
-        -P cmake/docs-ci.cmake
-
-    - name: Deploy docs
-      uses: peaceiris/actions-gh-pages@v4
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: build/docs/html
