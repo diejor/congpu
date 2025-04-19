@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: Continuous Integration
 
 on:
   push:
@@ -28,13 +28,15 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
+        with:
+          python-version: "3.12"
 
       - name: System tools for lint
         run: |
           sudo apt-get update -q
-          sudo apt-get install --no-install-recommends -y clang-format-18
-          pip install --user codespell
+          sudo apt-get install --no-install-recommends -y \
+            clang-format-18
+          pip3 install --user codespell
 
       - name: Lint
         run: cmake -D FORMAT_COMMAND=clang-format-18 -P cmake/lint.cmake
@@ -66,7 +68,8 @@ jobs:
       - uses: mozilla-actions/sccache-action@v0.0.5
 
       - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
+        with:
+          python-version: "3.12"
 
       - name: Conan cache
         uses: actions/cache@v4
@@ -122,7 +125,8 @@ jobs:
       - uses: mozilla-actions/sccache-action@v0.0.5
 
       - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
+        with:
+          python-version: "3.12"
 
       - name: Conan cache
         uses: actions/cache@v4
@@ -169,10 +173,12 @@ jobs:
             libvulkan1 mesa-vulkan-drivers vulkan-tools \
             libx11-dev libxrandr-dev libxi-dev libxrender-dev \
             libxkbcommon-dev xorg-dev libx11-xcb-dev \
-            libxcb1-dev libxcb-keysyms1-dev
+            libxcb1-dev libxcb-keysyms1-dev \
+            clang-tidy-18 cppcheck
 
       - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
+        with:
+          python-version: "3.12"
 
       - name: Conan cache
         uses: actions/cache@v4
@@ -189,7 +195,7 @@ jobs:
         run: |
           if [[ "${{ runner.os }}" == "Linux" ]];   then cmake --preset=ci-ubuntu;
           elif [[ "${{ runner.os }}" == "macOS" ]]; then cmake --preset=ci-macos;
-          else                                           cmake --preset=ci-windows;
+          else                                      cmake --preset=ci-windows;
           fi
 
       - name: Build
@@ -209,7 +215,7 @@ jobs:
     needs: [ sanitize, test ]
     runs-on: ubuntu-24.04
     if: |
-      github.ref      == 'refs/heads/master' &&
+      github.ref       == 'refs/heads/master' &&
       github.event_name == 'push'            &&
       github.repository_owner == 'diejor'
     permissions:
@@ -219,13 +225,14 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
+        with:
+          python-version: "3.12"
 
       - name: Doc tooling
         run: |
           sudo apt-get update -q
           sudo apt-get install --no-install-recommends -y doxygen
-          pip install --user jinja2 Pygments
+          pip3 install --user jinja2 Pygments
 
       - name: Build docs
         run: cmake -DPROJECT_SOURCE_DIR=$PWD \
