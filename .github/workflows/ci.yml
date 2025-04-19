@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: Continuous Integration
 
 on:
   push:
@@ -7,64 +7,63 @@ on:
     branches: [ master ]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  group: ${{ github.workflow }}‑${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 env:
-  # Store Conan cache under workspace for incremental cache
+  # keep Conan’s cache inside the workspace so it can be persisted
   CONAN_USER_HOME: ${{ github.workspace }}/.conan2
 
+defaults:
+  run:
+    shell: bash -euo pipefail {0}
+
+################################################################
+# 1) LINT
+################################################################
 jobs:
-  ################################################################
-  # 1) LINT
-  ################################################################
   lint:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Install codespell
-        run: pip3 install codespell
+
+      - name: System tools for lint
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install --no-install-recommends -y clang-format-18
+          pip install --user codespell
+
       - name: Lint
         run: cmake -D FORMAT_COMMAND=clang-format-18 -P cmake/lint.cmake
+
       - name: Spell check
         if: always()
         run: cmake -P cmake/spell.cmake
 
-  ################################################################
-  # 2) COVERAGE (Ubuntu + SwiftShader + purge needrestart)
-  ################################################################
+################################################################
+# 2) COVERAGE  (Ubuntu + lavapipe + X11 + purge needrestart)
+################################################################
   coverage:
     needs: [ lint ]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
-      # ← Add this
-      - name: Purge needrestart hook
-        run: sudo apt-get remove --purge -y needrestart
-
-      - uses: mozilla-actions/sccache-action@v0.0.5
-
-      - name: Install Vulkan loader & SwiftShader
+      - name: System dependencies
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y libvulkan1 vulkan-tools
-          sudo mkdir -p /usr/share/vulkan/icd.d
-          sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
-            https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
-          sudo wget -qO /usr/lib/x86_64-linux-gnu/libVkICD_swiftshader.so \
-            https://storage.googleapis.com/swiftshader/artifacts/Release/Linux/libVkICD_swiftshader.so
-
-      - name: Install LCov
-        run: sudo apt-get install -y lcov
-
-      - name: Install X11 headers
-        run: |
-          sudo apt-get install -y \
+          sudo apt-get remove --purge -y needrestart || true
+          sudo apt-get install --no-install-recommends -y \
+            libvulkan1 mesa-vulkan-drivers vulkan-tools \
+            lcov \
             libx11-dev libxrandr-dev libxi-dev libxrender-dev \
-            libxkbcommon-dev xorg-dev libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
+            libxkbcommon-dev xorg-dev libx11-xcb-dev \
+            libxcb1-dev libxcb-keysyms1-dev
+
+      - uses: mozilla-actions/sccache-action@v0.0.5
 
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
@@ -72,10 +71,10 @@ jobs:
       - name: Conan cache
         uses: actions/cache@v4
         with:
-          path: ~/.conan2
+          path: ${{ env.CONAN_USER_HOME }}
           key: conan-coverage-${{ hashFiles('conan*.[pl][yo]*') }}
 
-      - name: Install dependencies
+      - name: Install project dependencies
         run: |
           chmod +x .github/scripts/conan-ci-setup.sh
           .github/scripts/conan-ci-setup.sh
@@ -84,24 +83,24 @@ jobs:
         run: cmake --preset=ci-coverage
 
       - name: Build
-        run: cmake --build build/coverage -j 2
+        run: cmake --build build/coverage -j "$(nproc)"
 
       - name: Test
         working-directory: build/coverage
-        run: ctest --output-on-failure --no-tests=error -j 2
+        run: ctest --output-on-failure --no-tests=error -j "$(nproc)"
 
-      - name: Process coverage info
+      - name: Collect coverage
         run: cmake --build build/coverage -t coverage
 
-      - name: Submit to codecov.io
+      - name: Upload to Codecov
         uses: codecov/codecov-action@v4
         with:
           file: build/coverage/coverage.info
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  ################################################################
-  # 3) SANITIZE (Ubuntu + SwiftShader + purge needrestart)
-  ################################################################
+################################################################
+# 3) SANITIZE  (Ubuntu + lavapipe + X11 + purge needrestart)
+################################################################
   sanitize:
     needs: [ lint ]
     runs-on: ubuntu-24.04
@@ -110,27 +109,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ← Add this
-      - name: Purge needrestart hook
-        run: sudo apt-get remove --purge -y needrestart
-
-      - uses: mozilla-actions/sccache-action@v0.0.5
-
-      - name: Install Vulkan loader & SwiftShader
+      - name: System dependencies
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y libvulkan1 vulkan-tools
-          sudo mkdir -p /usr/share/vulkan/icd.d
-          sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
-            https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
-          sudo wget -qO /usr/lib/x86_64-linux-gnu/libVkICD_swiftshader.so \
-            https://storage.googleapis.com/swiftshader/artifacts/Release/Linux/libVkICD_swiftshader.so
-
-      - name: Install X11 headers
-        run: |
-          sudo apt-get install -y \
+          sudo apt-get remove --purge -y needrestart || true
+          sudo apt-get install --no-install-recommends -y \
+            libvulkan1 mesa-vulkan-drivers vulkan-tools \
             libx11-dev libxrandr-dev libxi-dev libxrender-dev \
-            libxkbcommon-dev xorg-dev libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
+            libxkbcommon-dev xorg-dev libx11-xcb-dev \
+            libxcb1-dev libxcb-keysyms1-dev
+
+      - uses: mozilla-actions/sccache-action@v0.0.5
 
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
@@ -138,10 +127,10 @@ jobs:
       - name: Conan cache
         uses: actions/cache@v4
         with:
-          path: ~/.conan2
+          path: ${{ env.CONAN_USER_HOME }}
           key: conan-sanitize-${{ hashFiles('conan*.[pl][yo]*') }}
 
-      - name: Install dependencies
+      - name: Install project dependencies
         run: |
           chmod +x .github/scripts/conan-ci-setup.sh
           .github/scripts/conan-ci-setup.sh
@@ -150,106 +139,99 @@ jobs:
         run: cmake --preset=ci-sanitize
 
       - name: Build
-        run: cmake --build build/sanitize -j 2
+        run: cmake --build build/sanitize -j "$(nproc)"
 
       - name: Test
         working-directory: build/sanitize
         env:
-          ASAN_OPTIONS: "detect_leaks=1:halt_on_error=1"
-          UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
-        run: ctest --output-on-failure --no-tests=error -j 2
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+        run: ctest --output-on-failure --no-tests=error -j "$(nproc)"
 
-  ################################################################
-  # 4) CROSS-PLATFORM TEST MATRIX (Ubuntu cell + purge needrestart)
-  ################################################################
+################################################################
+# 4) CROSS‑PLATFORM TEST MATRIX
+################################################################
   test:
     needs: [ lint ]
     strategy:
       matrix:
         os: [ macos-14, ubuntu-24.04, windows-2022 ]
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        shell: bash
-
     steps:
       - uses: actions/checkout@v4
 
-      # Ubuntu‑only: purge needrestart + SwiftShader + X11
-      - name: Purge needrestart hook
-        if: runner.os == 'Linux'
-        run: sudo apt-get remove --purge -y needrestart
-
-      - name: Install Vulkan loader & SwiftShader
+      - name: Linux system dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y libvulkan1 vulkan-tools
-          sudo mkdir -p /usr/share/vulkan/icd.d
-          sudo wget -qO /usr/share/vulkan/icd.d/google_swiftshader_icd.json \
-            https://raw.githubusercontent.com/google/SwiftShader/main/src/Vulkan/icd/icd.json
-          sudo wget -qO /usr/lib/x86_64-linux-gnu/libVkICD_swiftshader.so \
-            https://storage.googleapis.com/swiftshader/artifacts/Release/Linux/libVkICD_swiftshader.so
-
-      - name: Install X11 headers
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install -y \
+          sudo apt-get remove --purge -y needrestart || true
+          sudo apt-get install --no-install-recommends -y \
+            libvulkan1 mesa-vulkan-drivers vulkan-tools \
             libx11-dev libxrandr-dev libxi-dev libxrender-dev \
-            libxkbcommon-dev xorg-dev libx11-xcb-dev libxcb1-dev libxcb-keysyms1-dev
+            libxkbcommon-dev xorg-dev libx11-xcb-dev \
+            libxcb1-dev libxcb-keysyms1-dev
 
-      - name: Install Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
 
       - name: Conan cache
         uses: actions/cache@v4
         with:
-          path: ~/.conan2
+          path: ${{ env.CONAN_USER_HOME }}
           key: conan-${{ matrix.os }}-${{ hashFiles('conan*.[pl][yo]*') }}
 
-      - name: Install dependencies
+      - name: Install project dependencies
         run: |
           chmod +x .github/scripts/conan-ci-setup.sh
           .github/scripts/conan-ci-setup.sh
 
       - name: Configure
-        run: cmake --preset=ci-${{ matrix.os == 'ubuntu-24.04' && 'ubuntu' || (matrix.os == 'macos-14' && 'macos' || 'windows') }}
+        run: |
+          if [[ "${{ runner.os }}" == "Linux" ]];   then cmake --preset=ci-ubuntu;
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then cmake --preset=ci-macos;
+          else                                           cmake --preset=ci-windows;
+          fi
 
       - name: Build
-        run: cmake --build build --config Release -j 2
+        run: cmake --build build --config Release -j "$(nproc)"
 
       - name: Install
         run: cmake --install build --config Release --prefix prefix
 
       - name: Test
         working-directory: build
-        run: ctest --output-on-failure --no-tests=error -C Release -j 2
+        run: ctest --output-on-failure --no-tests=error -C Release -j "$(nproc)"
 
-  ################################################################
-  # 5) DOCS
-  ################################################################
+################################################################
+# 5) DOCS  (built only on pushes to `master`)
+################################################################
   docs:
     needs: [ sanitize, test ]
     runs-on: ubuntu-24.04
     if: |
-      github.ref == 'refs/heads/master' &&
-      github.event_name == 'push' &&
+      github.ref      == 'refs/heads/master' &&
+      github.event_name == 'push'            &&
       github.repository_owner == 'diejor'
-    permissions: { contents: write }
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Install m.css dependencies
-        run: pip3 install jinja2 Pygments
-      - name: Install Doxygen
-        run: sudo apt-get install -y doxygen
+
+      - name: Doc tooling
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install --no-install-recommends -y doxygen
+          pip install --user jinja2 Pygments
+
       - name: Build docs
-        run: cmake "-DPROJECT_SOURCE_DIR=$PWD" \
-                  "-DPROJECT_BINARY_DIR=$PWD/build" \
-                  -P cmake/docs-ci.cmake
+        run: cmake -DPROJECT_SOURCE_DIR=$PWD \
+                   -DPROJECT_BINARY_DIR=$PWD/build \
+                   -P cmake/docs-ci.cmake
+
       - name: Deploy docs
         uses: peaceiris/actions-gh-pages@v4
         with:
