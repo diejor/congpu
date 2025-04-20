@@ -9,10 +9,8 @@
 
 #include "lib.hpp"
 #include "logging_macros.h"
-#include "result.h"
-#include "slang_compiler.hpp"
-
 #include "shaders/gpu-printing.h"
+#include "slang_compiler.hpp"
 
 int main(int /*argc*/, char** /*argv*/)
 {
@@ -41,20 +39,12 @@ int main(int /*argc*/, char** /*argv*/)
     wgpu::Queue queue = device.GetQueue();
 
     std::filesystem::path path(SHADERS_DIR);
-    LOG_TRACE("Loading Slang source from file: {}", path.string());
+    slang_compiler::Compiler compiler({path.string()});
 
-    std::vector<std::string> entryPoints = {"computeMain"};
-    std::vector<std::string> includeDirectories = {path.string()};
+    slang_compiler::SlangProgram program =
+        compiler.createProgram("matmul", "computeMain");
 
-    std::string wgslSource;
-    auto compileResult = slang_compiler::compileSlangToWgsl(
-        "matmul", entryPoints, includeDirectories);
-    if (isError(compileResult)) {
-        LOG_ERROR("Error compiling Slang to WGSL: {}",
-                  std::get<1>(compileResult).message);
-        return EXIT_FAILURE;
-    }
-    wgslSource = std::get<0>(compileResult);
+    std::string wgslSource = program.compileToWGSL();
 
     LOG_TRACE("WGSL source:\n{}", wgslSource);
 }

@@ -1,34 +1,42 @@
 #pragma once
-
 #include <string>
 #include <vector>
 
+#include <slang-com-ptr.h>
 #include <slang.h>
-
-#include "result.h"
 
 namespace slang_compiler
 {
 
-/**
- * @brief Compiles a Slang module (provided as a source string) into WGSL.
- *
- * This function creates a Slang compilation session, loads the provided Slang
- * source code, adds the given entry points, links the module, and then
- * generates WGSL output code. All operations are performed in memory.
- *
- * @param moduleName         A name for the module (used for diagnostics).
- * @param slangSource        The complete Slang source code as a string.
- * @param entryPoints        A vector containing the entry point names to
- * compile.
- * @param includeDirectories An optional vector of directory paths for
- * additional include search paths.
- * @return Result<std::string, Error> On success, returns the generated WGSL
- * code as a string; otherwise returns an Error.
- */
-Result<std::string, Error> compileSlangToWgsl(
-    const std::string& moduleName,
-    const std::vector<std::string>& entryPoints,
-    const std::vector<std::string>& includeDirectories = {});
+struct SlangProgram
+{
+    Slang::ComPtr<slang::ISession> session;
+    Slang::ComPtr<slang::IModule> module;
+    Slang::ComPtr<slang::IComponentType> program;
+
+    [[nodiscard]]
+    std::string compileToWGSL() const;
+};
+
+class Compiler
+{
+  public:
+    explicit Compiler(std::vector<std::string> const& baseIncludeDirs = {});
+
+    Compiler(Compiler const&) = delete;
+    Compiler& operator=(Compiler const&) = delete;
+    Compiler(Compiler&&) = default;
+    Compiler& operator=(Compiler&&) = default;
+
+    [[nodiscard]]
+    SlangProgram createProgram(
+        std::string const& moduleName,
+        std::string const& entryPoint,
+        std::vector<std::string> const& extraIncludeDirs = {}) const;
+
+  private:
+    Slang::ComPtr<slang::IGlobalSession> m_globalSession;
+    std::vector<std::string> m_baseIncludeDirs;
+};
 
 }    // namespace slang_compiler

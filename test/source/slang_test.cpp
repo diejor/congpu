@@ -24,15 +24,13 @@ TEST_CASE("Simple single buffer", "[library]")
     wgpu::Queue queue = device.GetQueue();
 
     std::filesystem::path path(SHADERS_DIR);
+    slang_compiler::Compiler compiler({path.string()});
 
-    std::vector<std::string> entryPoints = {"computeMain"};
-    std::vector<std::string> includeDirectories = {path.string()};
+    slang_compiler::SlangProgram program =
+        compiler.createProgram("single-buffer", "computeMain");
 
     // Compile the Slang source to WGSL.
-    std::string wgslSource;
-    auto compileResult = slang_compiler::compileSlangToWgsl(
-        "single-buffer", entryPoints, includeDirectories);
-    wgslSource = std::get<0>(compileResult);
+    std::string wgslSource = program.compileToWGSL();
 
     std::vector<float> data1 = {1.0f, 2.0f, 3.0f, 4.0f};
 

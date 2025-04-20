@@ -1,175 +1,155 @@
 #include <algorithm>
+#include <array>
 #include <iostream>
-#include <vector>
 
 #include "slang_compiler.hpp"
 
-#include <slang-com-ptr.h>
-#include <slang.h>
-#include <slang-gfx.h>
-#include <tracy/Tracy.hpp>
-
 #include "logging_macros.h"
 
-using namespace slang_compiler;
-using namespace Slang;
-
-/**
- * @brief Structure to hold the active Slang session.
- */
-struct SessionInfo
+// ────────────────────────────────────────────────────────────
+// Small helpers
+// ────────────────────────────────────────────────────────────
+namespace
 {
-    Slang::ComPtr<slang::IGlobalSession> globalSession;
-    Slang::ComPtr<slang::ISession> session;
-};
 
-/**
- * @brief Creates a new Slang session with optional include directories.
- *
- * @param includeDirectories A vector of include directory paths.
- * @return Result<SessionInfo, Error> Returns a SessionInfo on success,
- * otherwise an Error.
- */
-Result<SessionInfo, Error> createSlangSession(
-    const std::vector<std::string>& includeDirectories)
+void diagnoseIfNeeded(Slang::ComPtr<slang::IBlob> const& blob)
 {
-    ZoneScoped;
-    SessionInfo sessionInfo;
-    slang::createGlobalSession(sessionInfo.globalSession.writeRef());
+    if (!blob) {
+        return;
+    }
+    std::cerr << "[slang] diagnostics:\n"
+              << static_cast<const char*>(blob->getBufferPointer()) << '\n';
+}
 
-    slang::SessionDesc sessionDesc;
+Slang::ComPtr<slang::ISession> createSession(
+    slang::IGlobalSession* global, std::vector<std::string> const& searchPaths)
+{
+    slang::SessionDesc desc {};
 
-    // Set up a single target for WGSL output.
-    slang::TargetDesc target;
+    slang::TargetDesc target {};
     target.format = SLANG_WGSL;
-    sessionDesc.targets = &target;
-    sessionDesc.targetCount = 1;
+    desc.targets = &target;
+    desc.targetCount = 1;
 
-    std::vector<const char*> includeDirectoriesData(includeDirectories.size());
-    std::transform(includeDirectories.cbegin(),
-                   includeDirectories.cend(),
-                   includeDirectoriesData.begin(),
-                   [](const std::string& path) { return path.c_str(); });
-    sessionDesc.searchPaths = includeDirectoriesData.data();
-    sessionDesc.searchPathCount =
-        static_cast<SlangInt>(includeDirectoriesData.size());
+    // convert search paths to const char*
+    std::vector<char const*> cPaths;
+    cPaths.reserve(searchPaths.size());
+    for (auto& p : searchPaths) {
+        cPaths.push_back(p.c_str());
+    }
 
-    sessionInfo.globalSession->createSession(sessionDesc,
-                                             sessionInfo.session.writeRef());
+    desc.searchPaths = cPaths.data();
+    desc.searchPathCount = static_cast<SlangInt>(cPaths.size());
 
-    return sessionInfo;
+    Slang::ComPtr<slang::ISession> session;
+    global->createSession(desc, session.writeRef());
+    return session;
 }
 
-/**
- * @brief Loads a Slang module from a source string.
- *
- * @param session      The active Slang session.
- * @param moduleName   The name to give the module.
- * @param slangSource  The Slang source code.
- * @param entryPoints  Entry point names to add into the composite module.
- * @return Result<ModuleInfo, Error> Returns a ModuleInfo on success, otherwise
- * an Error.
- */
-Result<::IModule, Error> loadSlangModule(
-    const Slang::ComPtr<slang::ISession>& session,
-    const std::string& moduleName,
-    const std::vector<std::string>& entryPoints)
+}    // namespace
+
+// ────────────────────────────────────────────────────────────
+//               SlangProgram implementation
+// ────────────────────────────────────────────────────────────
+std::string slang_compiler::SlangProgram::compileToWGSL() const
 {
-    ZoneScoped;
-    Slang::ComPtr<slang::IBlob> diagnostics;
-    slang::IModule* module =
-        session->loadModule(moduleName.c_str(), diagnostics.writeRef());
-    LOG_TRACE("Loaded module: {}", moduleName);
-    if (diagnostics != nullptr) {
-        std::string message =
-            reinterpret_cast<const char*>(diagnostics->getBufferPointer());
-        return Error {"Could not load slang module '" + moduleName + "':\n"
-                      + message};
+    if (!program) {
+        return {};
     }
 
-    // Gather dependency files if any.
-    size_t depCount = static_cast<size_t>(module->getDependencyFileCount());
-    std::vector<std::string> dependencyFiles(depCount);
-    for (size_t i = 0; i < depCount; ++i) {
-        dependencyFiles[i] =
-            module->getDependencyFilePath(static_cast<SlangInt32>(i));
-        LOG_TRACE("Dependency file: {}", dependencyFiles[i]);
+    Slang::ComPtr<slang::IBlob> codeBlob, diagBlob;
+    if (SLANG_FAILED(program->getTargetCode(
+            0, codeBlob.writeRef(), diagBlob.writeRef())))
+    {
+        diagnoseIfNeeded(diagBlob);
+        return {};
+    }
+    return std::string(static_cast<char const*>(codeBlob->getBufferPointer()),
+                       codeBlob->getBufferSize());
+}
+
+// ────────────────────────────────────────────────────────────
+//                 Compiler implementation
+// ────────────────────────────────────────────────────────────
+using namespace slang_compiler;
+using Slang::ComPtr;
+
+Compiler::Compiler(std::vector<std::string> const& baseIncludeDirs)
+    : m_baseIncludeDirs(baseIncludeDirs)
+{
+    slang::createGlobalSession(m_globalSession.writeRef());
+}
+
+SlangProgram Compiler::createProgram(
+    std::string const& moduleName,
+    std::string const& entryPoint,
+    std::vector<std::string> const& extraIncludeDirs) const
+{
+    // 1. ---- build search path list ------------------------------------------
+    std::vector<std::string> searchPaths = m_baseIncludeDirs;
+    searchPaths.insert(
+        searchPaths.end(), extraIncludeDirs.begin(), extraIncludeDirs.end());
+
+    // 2. ---- create a per‑compile ISession -----------------------------------
+    ComPtr<slang::ISession> session =
+        createSession(m_globalSession, searchPaths);
+    if (!session) {
+        LOG_ERROR("Failed to create Slang session");
+        return {};
     }
 
-    // Compose the module by adding the entry points.
-    std::vector<slang::IComponentType*> components;
-    components.push_back(module);
-    for (const std::string& entryPointName : entryPoints) {
-        Slang::ComPtr<slang::IEntryPoint> entryPoint;
-        SlangResult res = module->findEntryPointByName(entryPointName.c_str(),
-                                                       entryPoint.writeRef());
-        if (SLANG_FAILED(res)) {
-            return Error {"Entrypoint '" + entryPointName
-                          + "' not found in module '" + moduleName + "'."};
+    // 3. ---- load module
+    // ------------------------------------------------------
+    ComPtr<slang::IModule> module;
+    {
+        ComPtr<slang::IBlob> diagnosticsBlob;
+        module =
+            session->loadModule(moduleName.c_str(), diagnosticsBlob.writeRef());
+        diagnoseIfNeeded(diagnosticsBlob);
+        if (!module) {
+            LOG_ERROR("Failed to load module: {}", moduleName);
+            return {};
         }
-        components.push_back(entryPoint);
-    }
-    Slang::ComPtr<slang::IComponentType> program;
-    session->createCompositeComponentType(
-        components.data(),
-        static_cast<SlangInt32>(components.size()),
-        program.writeRef());
-
-    return ModuleInfo {program, dependencyFiles};
-}
-
-/**
- * @brief Compiles a loaded composite module to WGSL.
- *
- * This function links the module and extracts the WGSL code.
- *
- * @param program    The composite module.
- * @param moduleName The name of the module (for diagnostics).
- * @return Result<std::string, Error> Returns the WGSL code as a string on
- * success; otherwise, an Error.
- */
-Result<std::string, Error> compileModuleToWgsl(
-    const Slang::ComPtr<slang::IComponentType>& program,
-    const std::string& moduleName)
-{
-    ZoneScoped;
-    Slang::ComPtr<slang::IComponentType> linkedProgram;
-    Slang::ComPtr<ISlangBlob> linkDiagnostics;
-    program->link(linkedProgram.writeRef(), linkDiagnostics.writeRef());
-
-    Slang::ComPtr<slang::IBlob> codeBlob;
-    Slang::ComPtr<ISlangBlob> codeDiagnostics;
-    int targetIndex = 0;
-    linkedProgram->getTargetCode(
-        targetIndex, codeBlob.writeRef(), codeDiagnostics.writeRef());
-    // With a single target configured (WGSL)
-    if (codeDiagnostics) {
-        std::string message =
-            reinterpret_cast<const char*>(codeDiagnostics->getBufferPointer());
-        return Error {"Could not generate WGSL for module '" + moduleName
-                      + "': " + message};
+        LOG_TRACE("Loaded module: {}", moduleName);
     }
 
-    std::string wgslSource =
-        reinterpret_cast<const char*>(codeBlob->getBufferPointer());
-    return wgslSource;
-}
+    // 4. ---- find entry point + composite component --------------------------
+    ComPtr<slang::IEntryPoint> entry;
+    module->findEntryPointByName(entryPoint.c_str(), entry.writeRef());
 
-Result<std::string, Error> slang_compiler::compileSlangToWgsl(
-    const std::string& moduleName,
-    const std::vector<std::string>& entryPoints,
-    const std::vector<std::string>& includeDirectories)
-{
-    ZoneScoped;
-    SessionInfo sessionInfo;
-    TRY_ASSIGN(sessionInfo, createSlangSession(includeDirectories));
+    std::array<slang::IComponentType*, 2> parts {module.get(), entry.get()};
 
-    ModuleInfo moduleInfo;
-    TRY_ASSIGN(moduleInfo,
-               loadSlangModule(sessionInfo.session, moduleName, entryPoints));
+    ComPtr<slang::IComponentType> composite;
+    {
+        ComPtr<slang::IBlob> diagnosticsBlob;
+        session->createCompositeComponentType(parts.data(),
+                                              parts.size(),
+                                              composite.writeRef(),
+                                              diagnosticsBlob.writeRef());
+        diagnoseIfNeeded(diagnosticsBlob);
+        if (!composite) {
+            LOG_ERROR("Failed to create composite component");
+            return {};
+        }
+        LOG_TRACE("Created composite component");
+    }
 
-    std::string wgslOutput;
-    TRY_ASSIGN(wgslOutput, compileModuleToWgsl(moduleInfo.program, moduleName));
+    // 5. ---- link
+    // -------------------------------------------------------------
+    ComPtr<slang::IComponentType> linked;
+    {
+        ComPtr<slang::IBlob> diagnosticsBlob;
+        composite->link(linked.writeRef(), diagnosticsBlob.writeRef());
+        diagnoseIfNeeded(diagnosticsBlob);
+        if (!linked) {
+            LOG_ERROR("Failed to link program");
+            return {};
+        }
+        LOG_TRACE("Linked program");
+    }
 
-    return wgslOutput;
+    // 6. ---- package everything into SlangProgram ----------------------------
+    return SlangProgram {.session = std::move(session),
+                         .module = std::move(module),
+                         .program = std::move(linked)};
 }
