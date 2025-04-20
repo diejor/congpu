@@ -23,5 +23,16 @@ fi
 conan remote add dpconan https://conan.diejor.tech
 
 conan remove \* --lru=1M -c
-conan install . -b missing
+
+if [[ "${RUNNER_OS:-}" == "Windows" ]]; then
+  echo "=== Windows CI: forcing Dawn→D3D12 only, disabling Vulkan ==="
+  conan install . -b missing \
+    -s build_type=Release \
+    -o dawn:USE_VULKAN=False \
+    -o dawn:DAWN_ENABLE_D3D12=True
+else
+  echo "=== Non‑Windows: using standard conan install flags ==="
+  conan install . -b missing
+fi
+
 conan cache save '*/*:*' --file=conan_cache_save.tgz
