@@ -6,11 +6,13 @@
 
 #include <slang-com-ptr.h>
 #include <slang.h>
+#include <slang-gfx.h>
 #include <tracy/Tracy.hpp>
 
 #include "logging_macros.h"
 
 using namespace slang_compiler;
+using namespace Slang;
 
 /**
  * @brief Structure to hold the active Slang session.
@@ -59,17 +61,6 @@ Result<SessionInfo, Error> createSlangSession(
 }
 
 /**
- * @brief Structure to hold a loaded module and its dependency files.
- */
-struct ModuleInfo
-{
-    Slang::ComPtr<slang::IComponentType>
-        program;    ///< Handle to the composite component.
-    std::vector<std::string>
-        dependencyFiles;    ///< List of dependency file paths.
-};
-
-/**
  * @brief Loads a Slang module from a source string.
  *
  * @param session      The active Slang session.
@@ -79,7 +70,7 @@ struct ModuleInfo
  * @return Result<ModuleInfo, Error> Returns a ModuleInfo on success, otherwise
  * an Error.
  */
-Result<ModuleInfo, Error> loadSlangModule(
+Result<::IModule, Error> loadSlangModule(
     const Slang::ComPtr<slang::ISession>& session,
     const std::string& moduleName,
     const std::vector<std::string>& entryPoints)
@@ -102,6 +93,7 @@ Result<ModuleInfo, Error> loadSlangModule(
     for (size_t i = 0; i < depCount; ++i) {
         dependencyFiles[i] =
             module->getDependencyFilePath(static_cast<SlangInt32>(i));
+        LOG_TRACE("Dependency file: {}", dependencyFiles[i]);
     }
 
     // Compose the module by adding the entry points.
@@ -144,11 +136,6 @@ Result<std::string, Error> compileModuleToWgsl(
     Slang::ComPtr<slang::IComponentType> linkedProgram;
     Slang::ComPtr<ISlangBlob> linkDiagnostics;
     program->link(linkedProgram.writeRef(), linkDiagnostics.writeRef());
-    if (linkDiagnostics) {
-        std::string message =
-            reinterpret_cast<const char*>(linkDiagnostics->getBufferPointer());
-        return Error {"Could not link module '" + moduleName + "': " + message};
-    }
 
     Slang::ComPtr<slang::IBlob> codeBlob;
     Slang::ComPtr<ISlangBlob> codeDiagnostics;
@@ -174,16 +161,13 @@ Result<std::string, Error> slang_compiler::compileSlangToWgsl(
     const std::vector<std::string>& includeDirectories)
 {
     ZoneScoped;
-    // Create a Slang session with the provided include directories.
     SessionInfo sessionInfo;
     TRY_ASSIGN(sessionInfo, createSlangSession(includeDirectories));
 
-    // Load the module from the provided in-memory source.
     ModuleInfo moduleInfo;
     TRY_ASSIGN(moduleInfo,
                loadSlangModule(sessionInfo.session, moduleName, entryPoints));
 
-    // Compile the loaded module into WGSL.
     std::string wgslOutput;
     TRY_ASSIGN(wgslOutput, compileModuleToWgsl(moduleInfo.program, moduleName));
 

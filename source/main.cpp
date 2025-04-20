@@ -12,6 +12,8 @@
 #include "result.h"
 #include "slang_compiler.hpp"
 
+#include "shaders/gpu-printing.h"
+
 int main(int /*argc*/, char** /*argv*/)
 {
     ZoneScoped;

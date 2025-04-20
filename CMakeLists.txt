@@ -22,12 +22,14 @@ add_library(
     congpu_lib OBJECT
     source/lib.cpp
     source/slang_compiler.cpp
+    source/shaders/gpu-printing.cpp
 )
 
 target_include_directories(
     congpu_lib ${warning_guard}
     PUBLIC
     "\$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>"
+    "\$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source/shaders>"
 )
 
 target_compile_features(congpu_lib PUBLIC cxx_std_20)
