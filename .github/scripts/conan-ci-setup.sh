@@ -28,8 +28,8 @@ if [[ "${RUNNER_OS:-}" == "Windows" ]]; then
   echo "=== Windows CI: forcing Dawn→D3D12 only, disabling Vulkan ==="
   conan install . -b missing \
     -s build_type=Release \
-    -o dawn:USE_VULKAN=False \
-    -o dawn:DAWN_ENABLE_D3D12=True
+    -o dawn/*:USE_VULKAN=False \
+    -o dawn/*:DAWN_ENABLE_D3D12=True
 else
   echo "=== Non‑Windows: using standard conan install flags ==="
   conan install . -b missing
