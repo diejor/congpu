@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>congpu</title>
+  <title>detail namespace | congpu</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -33,7 +33,7 @@
             <li><a href="namespaces.html">Namespaces</a></li>
           </ol>
           <ol class="m-col-t-6 m-col-m-none" start="3">
-            <li><a href="annotated.html" id="m-navbar-current">Classes</a></li>
+            <li><a href="annotated.html">Classes</a></li>
             <li><a href="files.html">Files</a></li>
             <li class="m-show-m"><a href="#search" class="m-doc-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
               <use href="#m-doc-search-icon-path" />
@@ -48,39 +48,35 @@
   <div class="m-container m-container-inflatable">
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
-        <h1>Classes</h1>
-        <ul class="m-doc">
-          <li>namespace <a href="namespacedetail.html" class="m-doc">detail</a> <span class="m-doc"><span></span></span></li>
-          <li class="m-doc-collapsible">
-            <a href="#" onclick="return toggle(this)">namespace</a> <a href="namespacefmt.html" class="m-doc">fmt</a> <span class="m-doc"><span></span></span>
-            <ul class="m-doc">
-              <li>struct <a href="structfmt_1_1formatter_3_01T_01_4.html" class="m-doc">formatter&lt;T&gt;</a> <span class="m-doc"><span></span></span></li>
-              <li>struct <a href="structfmt_1_1formatter_3_01wgpu_1_1StringView_01_4.html" class="m-doc">formatter&lt;wgpu::StringView&gt;</a> <span class="m-doc"><span></span></span></li>
-            </ul>
-          </li>
-          <li>namespace <a href="namespaceslang__compiler.html" class="m-doc">slang_compiler</a> <span class="m-doc"><span></span></span></li>
-          <li>struct <a href="structError.html" class="m-doc">Error</a> <span class="m-doc"></span></li>
-          <li>struct <a href="structLibrary.html" class="m-doc">Library</a> <span class="m-doc">The core implementation of the executable.</span></li>
-          <li>struct <a href="structModuleInfo.html" class="m-doc">ModuleInfo</a> <span class="m-doc">Structure to hold a loaded module and its dependency files.</span></li>
-          <li>struct <a href="structSessionInfo.html" class="m-doc">SessionInfo</a> <span class="m-doc">Structure to hold the active Slang session.</span></li>
-          <li>struct <a href="structVoid.html" class="m-doc">Void</a> <span class="m-doc"></span></li>
-        </ul>
-        <script>
-        function toggle(e) {
-            e.parentElement.className = e.parentElement.className == 'm-doc-collapsible' ?
-                'm-doc-expansible' : 'm-doc-collapsible';
-            return false;
-        }
-        /* Collapse all nodes marked as such. Doing it via JS instead of
-           directly in markup so disabling it doesn't harm usability. The list
-           is somehow regenerated on every iteration and shrinks as I change
-           the classes. It's not documented anywhere and I'm not sure if this
-           is the same across browsers, so I am going backwards in that list to
-           be sure. */
-        var collapsed = document.getElementsByClassName("collapsed");
-        for(var i = collapsed.length - 1; i >= 0; --i)
-            collapsed[i].className = 'm-doc-expansible';
-        </script>
+        <h1>
+          detail <span class="m-thin">namespace</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="logging__macros_8h.html">&lt;source/logging_macros.h&gt;</a></div>
+        </h1>
+        <p><span></span></p>
+        <nav class="m-block m-default">
+          <h3>Contents</h3>
+          <ul>
+            <li>
+              Reference
+              <ul>
+                <li><a href="#func-members">Functions</a></li>
+              </ul>
+            </li>
+          </ul>
+        </nav>
+        <section id="func-members">
+          <h2><a href="#func-members">Functions</a></h2>
+          <dl class="m-doc">
+            <dt id="a9ee900836dd4473dcfc8c789ec14d80e">
+              <div class="m-doc-template">template&lt;<a href="logging__macros_8h.html#aca1fd1d8935433e6ba2e3918214e07f9" class="m-doc">LogLevel</a> L, typename... Args&gt;</div>
+              <span class="m-doc-wrap-bumper">auto <a href="#a9ee900836dd4473dcfc8c789ec14d80e" class="m-doc-self">sink</a>(</span><span class="m-doc-wrap">std::FILE* stream,
+              std::string_view fmtStr,
+              <a href="logging__macros_8h.html#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">const</a> std::source_location&amp; loc,
+              <a href="logging__macros_8h.html#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">Args</a> &amp;&amp; ... args) -&gt; <a href="logging__macros_8h.html#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">void</a></span>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
       </div>
     </div>
   </div>

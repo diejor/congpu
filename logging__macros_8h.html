@@ -58,6 +58,7 @@
             <li>
               Reference
               <ul>
+                <li><a href="#namespaces">Namespaces</a></li>
                 <li><a href="#nested-classes">Classes</a></li>
                 <li><a href="#enum-members">Enums</a></li>
                 <li><a href="#func-members">Functions</a></li>
@@ -67,11 +68,26 @@
             </li>
           </ul>
         </nav>
+        <section id="namespaces">
+          <h2><a href="#namespaces">Namespaces</a></h2>
+          <dl class="m-doc">
+            <dt>namespace <a href="namespacedetail.html" class="m-doc">detail</a></dt>
+            <dd><span></span></dd>
+            <dt>namespace <a href="namespacefmt.html" class="m-doc">fmt</a></dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
         <section id="nested-classes">
           <h2><a href="#nested-classes">Classes</a></h2>
           <dl class="m-doc">
             <dt>
-              struct <a href="structLogger.html" class="m-doc">Logger</a>
+              <div class="m-doc-template">template&lt;&gt;</div>
+              struct <a href="structfmt_1_1formatter_3_01wgpu_1_1StringView_01_4.html" class="m-doc">fmt::formatter&lt;wgpu::StringView&gt;</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt>
+              <div class="m-doc-template">template&lt;<a href="logging__macros_8h.html#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">typename</a> <a href="logging__macros_8h.html#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">T</a>&gt;</div>
+              struct <a href="structfmt_1_1formatter_3_01T_01_4.html" class="m-doc">fmt::formatter&lt;T&gt;</a>
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -80,11 +96,10 @@
           <h2><a href="#enum-members">Enums</a></h2>
           <dl class="m-doc">
             <dt id="aca1fd1d8935433e6ba2e3918214e07f9">
-              <span class="m-doc-wrap-bumper">enum <a href="#aca1fd1d8935433e6ba2e3918214e07f9" class="m-doc-self">LogLevel</a> { </span><span class="m-doc-wrap"><a href="#aca1fd1d8935433e6ba2e3918214e07f9a6d981d7d88e5e7ae982e5514e0a6ceac" class="m-doc">LL_NONE</a> = 0,
-              <a href="#aca1fd1d8935433e6ba2e3918214e07f9a50717458baf49c204bb0645418e0da15" class="m-doc">LL_ERROR</a>,
-              <a href="#aca1fd1d8935433e6ba2e3918214e07f9a7413c537cbbee6447b4d2a2fd90bd1c9" class="m-doc">LL_WARN</a>,
-              <a href="#aca1fd1d8935433e6ba2e3918214e07f9a3d0aabc1a000a1668922ab44aeca5771" class="m-doc">LL_INFO</a>,
-              <a href="#aca1fd1d8935433e6ba2e3918214e07f9ac3d5eeff2f636c96f5aab91b3dc90afd" class="m-doc">LL_TRACE</a> }</span>
+              <span class="m-doc-wrap-bumper">enum class <a href="#aca1fd1d8935433e6ba2e3918214e07f9" class="m-doc-self">LogLevel</a> { </span><span class="m-doc-wrap"><a href="#aca1fd1d8935433e6ba2e3918214e07f9a902b0d55fddef6f8d651fe1035b7d4bd" class="m-doc">Error</a> = 0,
+              <a href="#aca1fd1d8935433e6ba2e3918214e07f9a56525ae64d370c0b448ac0d60710ef17" class="m-doc">Warn</a>,
+              <a href="#aca1fd1d8935433e6ba2e3918214e07f9a4059b0251f66a18cb56f544728796875" class="m-doc">Info</a>,
+              <a href="#aca1fd1d8935433e6ba2e3918214e07f9add4ec0ac4e58f7c32a01244ae91150b1" class="m-doc">Trace</a> }</span>
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -92,8 +107,14 @@
         <section id="func-members">
           <h2><a href="#func-members">Functions</a></h2>
           <dl class="m-doc">
-            <dt id="a0be980c8c7fb754367a4346ac48cbf7f">
-              <span class="m-doc-wrap-bumper">void <a href="#a0be980c8c7fb754367a4346ac48cbf7f" class="m-doc-self">setLogLevel</a>(</span><span class="m-doc-wrap">int level)</span>
+            <dt id="a521f37c7ef6aff5f2d74721cf5c79836">
+              <span class="m-doc-wrap-bumper">auto <a href="#a521f37c7ef6aff5f2d74721cf5c79836" class="m-doc-self">level_name</a>(</span><span class="m-doc-wrap"><a href="#aca1fd1d8935433e6ba2e3918214e07f9" class="m-doc">LogLevel</a> L) -&gt; <a href="#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">constexpr</a> <a href="#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">std::<wbr />string_view</a> <span class="m-label m-flat m-primary">constexpr</span> <span class="m-label m-flat m-success">noexcept</span></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a9d1fa3196d7554630c610b61d2e36e9e">
+              <div class="m-doc-template">template&lt;<a href="#aca1fd1d8935433e6ba2e3918214e07f9" class="m-doc">LogLevel</a>&gt;</div>
+              <span class="m-doc-wrap-bumper">void <a href="#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc-self">tracy_emit</a>(</span><span class="m-doc-wrap">const char*,
+              size_t) <span class="m-label m-flat m-primary">constexpr</span> <span class="m-label m-flat m-success">noexcept</span></span>
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -101,20 +122,16 @@
         <section id="var-members">
           <h2><a href="#var-members">Variables</a></h2>
           <dl class="m-doc">
-            <dt id="a64a47fd6c1707df302397ccf01ad667a">
-              static const char* <a href="#a64a47fd6c1707df302397ccf01ad667a" class="m-doc-self">LOG_LEVEL_STR</a>
+            <dt id="adcc6b8f19525406521a911317cd33caf">
+              <a href="#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">constexpr</a> <a href="#aca1fd1d8935433e6ba2e3918214e07f9" class="m-doc">LogLevel</a> <a href="#adcc6b8f19525406521a911317cd33caf" class="m-doc-self">kMinCompileTimeLevel</a> <span class="m-label m-flat m-primary">constexpr</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="a237b50ccd4be437db1d136159588316e">
-              static <a href="structLogger.html" class="m-doc">Logger</a> <a href="#a237b50ccd4be437db1d136159588316e" class="m-doc-self">DEFAULT_LOGGER</a>
+            <dt id="a41198dc5b19589a5d74c06fc957fb4f2">
+              <a href="#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">constexpr</a> <a href="#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">const</a> <a href="#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">char</a>* <a href="#a41198dc5b19589a5d74c06fc957fb4f2" class="m-doc-self">LOG_COLORS</a> <span class="m-label m-flat m-primary">constexpr</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="a39b425aec1a0422292de94fd6d018842">
-              static const char* <a href="#a39b425aec1a0422292de94fd6d018842" class="m-doc-self">LOG_COLORS</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="aba65170e69aa47eaf75dc4cc5e1923c2">
-              static const char* <a href="#aba65170e69aa47eaf75dc4cc5e1923c2" class="m-doc-self">RESET_COLOR</a>
+            <dt id="aff985ba6aed473768f192475b2764fc9">
+              <a href="#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">constexpr</a> <a href="#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">const</a> <a href="#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">char</a>* <a href="#aff985ba6aed473768f192475b2764fc9" class="m-doc-self">RESET_COLOR</a> <span class="m-label m-flat m-primary">constexpr</span>
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -122,13 +139,6 @@
         <section id="define-members">
           <h2><a href="#define-members">Defines</a></h2>
           <dl class="m-doc">
-            <dt id="a3f60110a63bea98ee1cd99f1b00894b8">
-              <span class="m-doc-wrap-bumper">#define <a href="#a3f60110a63bea98ee1cd99f1b00894b8" class="m-doc-self">LOG</a>(</span><span class="m-doc-wrap">logger,
-              logLevel,
-              fmt,
-              ...)</span>
-            </dt>
-            <dd><span></span></dd>
             <dt id="ae6fc70e87e424e7083c63696b8fb9e78">
               <span class="m-doc-wrap-bumper">#define <a href="#ae6fc70e87e424e7083c63696b8fb9e78" class="m-doc-self">LOG_ERROR</a>(</span><span class="m-doc-wrap">fmt,
               ...)</span>
@@ -149,38 +159,7 @@
               ...)</span>
             </dt>
             <dd><span></span></dd>
-            <dt>
-              <span class="m-doc-wrap-bumper">#define <a href="#a0923f6295c0b9cfeb83f79d33cc234cb" class="m-doc">ERR</a>(</span><span class="m-doc-wrap">cond,
-              fmt,
-              ...)</span>
-            </dt>
-            <dd></dd>
-            <dt>
-              <span class="m-doc-wrap-bumper">#define <a href="#a87e9a748e14ebbbfd3df6b0e9ebfef50" class="m-doc">WARN_COND</a>(</span><span class="m-doc-wrap">cond,
-              fmt,
-              ...)</span>
-            </dt>
-            <dd></dd>
           </dl>
-        </section>
-        <section>
-          <h2>Define documentation</h2>
-          <section class="m-doc-details" id="a0923f6295c0b9cfeb83f79d33cc234cb"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper">#define <a href="#a0923f6295c0b9cfeb83f79d33cc234cb" class="m-doc-self">ERR</a>(</span><span class="m-doc-wrap">cond,
-              fmt,
-              ...)</span>
-            </h3>
-<p>ERR:</p><p>If the condition is true, logs an error message at LL_ERROR level (including the stringized condition) and returns from the function.</p><p>Usage: ERR(val &lt; 0, &quot;Invalid negative value: %d&quot;, val);</p>
-          </div></section>
-          <section class="m-doc-details" id="a87e9a748e14ebbbfd3df6b0e9ebfef50"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper">#define <a href="#a87e9a748e14ebbbfd3df6b0e9ebfef50" class="m-doc-self">WARN_COND</a>(</span><span class="m-doc-wrap">cond,
-              fmt,
-              ...)</span>
-            </h3>
-<p>WARN_COND:</p><p>If the condition is true, logs a warning message at LL_WARN level (including the stringized condition) but does not return.</p>
-          </div></section>
         </section>
       </div>
     </div>
