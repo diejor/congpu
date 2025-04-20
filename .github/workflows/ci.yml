@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 concurrency:
-  group: ${{ github.workflow }}‑${{ github.head_ref || github.ref_name }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 env:
@@ -18,9 +18,6 @@ defaults:
   run:
     shell: bash -euo pipefail {0}
 
-################################################################
-# 1) LINT
-################################################################
 jobs:
   lint:
     runs-on: ubuntu-24.04
@@ -45,9 +42,6 @@ jobs:
         if: always()
         run: cmake -P cmake/spell.cmake
 
-################################################################
-# 2) COVERAGE  (Ubuntu + lavapipe + X11 + purge needrestart)
-################################################################
   coverage:
     needs: [ lint ]
     runs-on: ubuntu-24.04
@@ -101,9 +95,6 @@ jobs:
           file: build/coverage/coverage.info
           token: ${{ secrets.CODECOV_TOKEN }}
 
-################################################################
-# 3) SANITIZE  (Ubuntu + lavapipe + X11 + purge needrestart)
-################################################################
   sanitize:
     needs: [ lint ]
     runs-on: ubuntu-24.04
@@ -152,15 +143,16 @@ jobs:
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
         run: ctest --output-on-failure --no-tests=error -j "$(nproc)"
 
-################################################################
-# 4) CROSS‑PLATFORM TEST MATRIX
-################################################################
   test:
     needs: [ lint ]
     strategy:
       matrix:
         os: [ macos-14, ubuntu-24.04, windows-2022 ]
     runs-on: ${{ matrix.os }}
+    # Force Dawn to use D3D12 on Windows; empty elsewhere
+    env:
+      DAWN_BACKEND: ${{ matrix.os == 'windows-2022' && 'd3d12' || '' }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -193,9 +185,12 @@ jobs:
 
       - name: Configure
         run: |
-          if [[ "${{ runner.os }}" == "Linux" ]];   then cmake --preset=ci-ubuntu;
-          elif [[ "${{ runner.os }}" == "macOS" ]]; then cmake --preset=ci-macos;
-          else                                      cmake --preset=ci-windows;
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            cmake --preset=ci-ubuntu
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            cmake --preset=ci-macos
+          else
+            cmake --preset=ci-windows
           fi
 
       - name: Build
@@ -208,9 +203,6 @@ jobs:
         working-directory: build
         run: ctest --output-on-failure --no-tests=error -C Release -j "$(nproc)"
 
-################################################################
-# 5) DOCS  (built only on pushes to `master`)
-################################################################
   docs:
     needs: [ sanitize, test ]
     runs-on: ubuntu-24.04
