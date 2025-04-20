@@ -24,7 +24,6 @@ if [[ "${RUNNER_OS:-}" == "Windows" ]]; then
     -o dawn/*:enable_vulkan=False \
     -o dawn/*:enable_d3d12=True
 else
-  echo "=== Non‑Windows CI: default install (Vulkan on, Metal off) ==="
   conan install . -b missing
 fi
 

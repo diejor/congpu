@@ -65,10 +65,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Conan cache
+      - name: Prepare Conan home
+        run: mkdir -p "${{ env.CONAN_USER_HOME }}"
+
+      - name: Conan cache (tarball)
         uses: actions/cache@v4
         with:
-          path: ${{ env.CONAN_USER_HOME }}
+          path: conan_cache_save.tgz
           key: conan-coverage-${{ hashFiles('conan*.[pl][yo]*') }}
 
       - name: Install project dependencies
@@ -122,7 +125,7 @@ jobs:
       - name: Conan cache
         uses: actions/cache@v4
         with:
-          path: ${{ env.CONAN_USER_HOME }}
+          path: conan_cache_save.tgz
           key: conan-sanitize-${{ hashFiles('conan*.[pl][yo]*') }}
 
       - name: Install project dependencies
@@ -175,7 +178,7 @@ jobs:
       - name: Conan cache
         uses: actions/cache@v4
         with:
-          path: ${{ env.CONAN_USER_HOME }}
+          path: conan_cache_save.tgz
           key: conan-${{ matrix.os }}-${{ hashFiles('conan*.[pl][yo]*') }}
 
       - name: Install project dependencies
@@ -227,7 +230,8 @@ jobs:
           pip3 install --user jinja2 Pygments
 
       - name: Build docs
-        run: cmake -DPROJECT_SOURCE_DIR=$PWD \
+        run: | 
+          cmake -DPROJECT_SOURCE_DIR=$PWD \
                    -DPROJECT_BINARY_DIR=$PWD/build \
                    -P cmake/docs-ci.cmake
 
