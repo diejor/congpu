@@ -1,4 +1,4 @@
-// gpu-printing.cpp
+// gpu-printing.cppgpu-
 #include "gpu-printing.h"
 
 #include <assert.h>
@@ -228,7 +228,7 @@ void GPUPrinting::processGPUPrintCommands(const void* data, size_t dataSize)
                 // code, we can print it.
                 //
                 // TODO: This code isn't robust against strings with
-                // embeded null bytes.
+                // embedded null bytes.
                 // s
                 printf("%s", iter->second.c_str());
             } break;

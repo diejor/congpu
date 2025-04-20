@@ -29,7 +29,7 @@ class Compiler
     Compiler& operator=(Compiler&&) = default;
 
     [[nodiscard]]
-    SlangProgram createProgram(
+    SlangProgram CreateProgram(
         std::string const& moduleName,
         std::string const& entryPoint,
         std::vector<std::string> const& extraIncludeDirs = {}) const;

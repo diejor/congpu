@@ -27,7 +27,7 @@ TEST_CASE("Simple single buffer", "[library]")
     slang_compiler::Compiler compiler({path.string()});
 
     slang_compiler::SlangProgram program =
-        compiler.createProgram("single-buffer", "computeMain");
+        compiler.CreateProgram("single-buffer", "computeMain");
 
     // Compile the Slang source to WGSL.
     std::string wgslSource = program.compileToWGSL();

@@ -63,14 +63,13 @@ uint _allocatePrintWords(uint wordCount)
     // get back the old value of the counter, which tells us the
     // offset at which the words for our printing operation should start.
     //
-    uint wordOffset = 0;
-    gPrintBuffer[0].add(wordCount + wordOffset);
+    uint oldCount = gPrintBuffer[0].add(wordCount);
 
     // Because the first word of the buffer is reserved for the counter,
     // and the counter value starts at zero, we need to add one to
     // get to the actual offset for the data to be written.
     //
-    return wordOffset + 1;
+    return oldCount + 1;
 }
 
 // Java-style `println`
@@ -121,7 +120,7 @@ void println()
 //      ...
 //
 // but it should be clear that this approach doesn't scale at all
-// to functions with multiple argumenst:
+// to functions with multiple arguments:
 //
 //      void println(int a, int b);
 //      void println(float a, int b);
@@ -178,7 +177,7 @@ void println<T : IPrintable>(T value)
 // to be able to change it!
 //
 // It just so happens that another Slang feature, `extension`
-// declarations, lets us extend a type with new methods *and*
+// declarations, let us extend a type with new methods *and*
 // allows us to add new interface implementations to it.
 //
 // We can therefore making the exisint Slang `uint` type be
@@ -380,6 +379,41 @@ void printf_<A : IPrintf, B : IPrintf>(String format, A a, B b)
 
     a.writePrintfWords(gPrintBuffer, wordOffset); wordOffset += aCount;
     b.writePrintfWords(gPrintBuffer, wordOffset); wordOffset += bCount;
+}
+
+void printf_<A : IPrintf, B : IPrintf, C : IPrintf>(
+             String format, A a,            B b,            C c)
+{
+    uint wordCount = 0;
+    uint aCount = a.getPrintfWordCount(); wordCount += aCount;
+    uint bCount = b.getPrintfWordCount(); wordCount += bCount;
+    uint cCount = c.getPrintfWordCount(); wordCount += cCount;
+
+    uint wordOffset = _beginPrintf(format, wordCount);
+
+    a.writePrintfWords(gPrintBuffer, wordOffset); wordOffset += aCount;
+    b.writePrintfWords(gPrintBuffer, wordOffset); wordOffset += bCount;
+    c.writePrintfWords(gPrintBuffer, wordOffset); wordOffset += cCount;
+}
+
+// Single backend entry-point that handles any number of format args:
+void printf_(String format, IPrintf[] args)
+{
+    // Sum up the total payload words:
+    uint wordCount = 0;
+    for (int i = 0; i < args.getCount(); ++i)
+        wordCount += args[i].getPrintfWordCount();
+
+    // Allocate: format-hash + payload-length header + payload words
+    uint wordOffset = _beginPrintf(format, wordCount);
+
+    // Emit each argument in sequence
+    for (int i = 0; i < args.getCount(); ++i)
+    {
+        let arg = args[i];
+        arg.writePrintfWords(gPrintBuffer, wordOffset);
+        wordOffset += arg.getPrintfWordCount();
+    }
 }
 
 // Extending this `printf()` implementation to handle more format arguments

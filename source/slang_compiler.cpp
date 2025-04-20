@@ -80,7 +80,7 @@ Compiler::Compiler(std::vector<std::string> const& baseIncludeDirs)
     slang::createGlobalSession(m_globalSession.writeRef());
 }
 
-SlangProgram Compiler::createProgram(
+SlangProgram Compiler::CreateProgram(
     std::string const& moduleName,
     std::string const& entryPoint,
     std::vector<std::string> const& extraIncludeDirs) const
