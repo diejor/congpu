@@ -46,7 +46,7 @@ int main(int /*argc*/, char** /*argv*/)
 
     std::string wgslSource = slangProgram.compileToWGSL();
 
-    LOG_TRACE("WGSL source:\n{}", wgslSource);
+    // LOG_TRACE("WGSL source:\n{}", wgslSource);
 
     GPUPrinting gpuPrinting;
     gpuPrinting.loadStrings(slangProgram.program->getLayout());
@@ -167,8 +167,7 @@ int main(int /*argc*/, char** /*argv*/)
 
     computePassEncoder.SetPipeline(computePipeline);
     computePassEncoder.SetBindGroup(0, bindGroup);
-    computePassEncoder.DispatchWorkgroups(2, 1, 1);
-    computePassEncoder.DispatchWorkgroups(4, 1, 1);
+    computePassEncoder.DispatchWorkgroups(4, 4, 1);
     computePassEncoder.End();
 
     commandEncoder.CopyBufferToBuffer(

@@ -53,7 +53,8 @@ void GPUPrinting::loadStrings(slang::ProgramLayout* slangReflection)
         // string literals is not currently documented, and may
         // change in future releases of the compiler.
         //
-        StringHash hash = spComputeStringHash(stringData, stringSize);
+        StringHash hash = static_cast<StringHash>(
+            spComputeStringHash(stringData, stringSize));
 
         // The `GPUPrinting` implementation will store the mapping
         // from hash codes back to strings in a simple STL `map`.
@@ -87,7 +88,7 @@ void GPUPrinting::processGPUPrintCommands(const void* data, size_t dataSize)
     // Otherwise, we set ourselves up to start reading data from the buffer
     // at a granularity of 32-bit words.
     //
-    const uint32_t* dataCursor = (const uint32_t*)data;
+    const uint32_t* dataCursor = static_cast<const uint32_t*>(data);
 
     // The first word of a printing buffer gives us the total number of
     // words that were appended by GPU printing operations.
@@ -110,13 +111,13 @@ void GPUPrinting::processGPUPrintCommands(const void* data, size_t dataSize)
         fprintf(stderr,
                 "warning: GPU code attempted to write %llu bytes to the "
                 "printing buffer, but only %llu " "bytes were available\n",
-                (unsigned long long)totalBytesWritten,
-                (unsigned long long)dataSize);
+                static_cast<unsigned long long>(totalBytesWritten),
+                static_cast<unsigned long long>(dataSize));
 
         // If the buffer is full, then we only want to read through
         // to the end of what is available.
         //
-        dataEnd = ((const uint32_t*)data) + dataWordCount;
+        dataEnd = static_cast<const uint32_t*>(data) + dataWordCount;
     }
 
     // We will now proceed to read off "commands" from the buffer,
@@ -156,8 +157,9 @@ void GPUPrinting::processGPUPrintCommands(const void* data, size_t dataSize)
                 // change that the buffer is corrupted or invalid, but we will
                 // try to soldier on and process further commands.
                 //
-                fprintf(
-                    stderr, "error: unexpected GPU printing op %d\n", (int)op);
+                fprintf(stderr,
+                        "error: unexpected GPU printing op %d\n",
+                        static_cast<int>(op));
                 break;
 
             case GPUPrintingOp::Nop:
@@ -188,7 +190,7 @@ void GPUPrinting::processGPUPrintCommands(const void* data, size_t dataSize)
 
                 CASE(Int32, "%d", int);
                 CASE(UInt32, "%u", unsigned int);
-                CASE(Float32, "%f", float);
+                CASE(Float32, "%f", double);
 
 #undef CASE
 
@@ -206,7 +208,7 @@ void GPUPrinting::processGPUPrintCommands(const void* data, size_t dataSize)
                 // for this command:
                 //
                 assert(payloadWordCount >= 1);
-                StringHash hash = *payloadWords++;
+                StringHash hash = static_cast<StringHash>(*payloadWords++);
                 //
                 // Next, we look up the hash value in a map from hash
                 // codes to strings, that was seeded with strings known
@@ -242,7 +244,8 @@ void GPUPrinting::processGPUPrintCommands(const void* data, size_t dataSize)
                 // `GPUPrintingOp::String` case.
                 //
                 assert(payloadWords != payloadWordsEnd);
-                StringHash formatHash = *payloadWords++;
+                StringHash formatHash =
+                    static_cast<StringHash>(*payloadWords++);
 
                 auto iter = m_hashedStrings.find(formatHash);
                 if (iter == m_hashedStrings.end()) {
@@ -350,12 +353,12 @@ void GPUPrinting::processGPUPrintCommands(const void* data, size_t dataSize)
                             // instead of `double`. This isn't compatible with C
                             // rules, but makes more sense for GPU code.
                             //
-                            CASE('f', "%f", float);
-                            CASE('F', "%F", float);
-                            CASE('e', "%e", float);
-                            CASE('E', "%E", float);
-                            CASE('g', "%g", float);
-                            CASE('G', "%G", float);
+                            CASE('f', "%f", double);
+                            CASE('F', "%F", double);
+                            CASE('e', "%e", double);
+                            CASE('E', "%E", double);
+                            CASE('g', "%g", double);
+                            CASE('G', "%G", double);
                             CASE('c', "%c", int);
 
 #undef CASE
@@ -366,16 +369,17 @@ void GPUPrinting::processGPUPrintCommands(const void* data, size_t dataSize)
                             // scheme.
                             //
                             assert(payloadWords != payloadWordsEnd);
-                            StringHash hash = *payloadWords++;
-                            auto iter = m_hashedStrings.find(hash);
-                            if (iter == m_hashedStrings.end()) {
+                            StringHash hash =
+                                static_cast<StringHash>(*payloadWords++);
+                            auto iterS = m_hashedStrings.find(hash);
+                            if (iterS == m_hashedStrings.end()) {
                                 fprintf(
                                     stderr,
                                     "error: string with unknown hash 0x%x\n",
                                     hash);
                                 continue;
                             }
-                            printf("%s", iter->second.c_str());
+                            printf("%s", iterS->second.c_str());
                         } break;
                     }
                 }

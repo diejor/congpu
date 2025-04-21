@@ -99,6 +99,14 @@
       }
     },
     {
+      "name": "ci-linux-arm",
+      "hidden": true,
+      "inherits": ["ci-linux"],
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-D_GLIBCXX_ASSERTIONS=1 -fstack-protector-strong -fstack-clash-protection"
+      }
+    },
+    {
       "name": "ci-darwin",
       "inherits": ["flags-appleclang", "ci-std"],
       "generator": "Xcode",
