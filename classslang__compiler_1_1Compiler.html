@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>SessionInfo struct | congpu</title>
+  <title>slang_compiler::Compiler class | congpu</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -49,30 +49,54 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          SessionInfo <span class="m-thin">struct</span>
-          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="slang__compiler_8cpp.html">&lt;source/slang_compiler.cpp&gt;</a></div>
+          <span class="m-breadcrumb"><a href="namespaceslang__compiler.html">slang_compiler</a>::<wbr/></span>Compiler <span class="m-thin">class</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="slang__compiler_8hpp.html">&lt;source/slang_compiler.hpp&gt;</a></div>
         </h1>
-        <p>Structure to hold the active Slang session.</p>
+        <p><span></span></p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
             <li>
               Reference
               <ul>
-                <li><a href="#pub-attribs">Public variables</a></li>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-methods">Public functions</a></li>
               </ul>
             </li>
           </ul>
         </nav>
-        <section id="pub-attribs">
-          <h2><a href="#pub-attribs">Public variables</a></h2>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="aa32713d6c81c2ed759c0cd5ea2e9773a">
-              Slang::ComPtr&lt;slang::IGlobalSession&gt; <a href="#aa32713d6c81c2ed759c0cd5ea2e9773a" class="m-doc-self">globalSession</a>
+            <dt id="a66f6d2bb70e0a87164c00c80d7597c8c">
+              <span class="m-doc-wrap-bumper"><a href="#a66f6d2bb70e0a87164c00c80d7597c8c" class="m-doc-self">Compiler</a>(</span><span class="m-doc-wrap">std::vector&lt;std::string&gt; <a href="logging__macros_8h.html#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">const</a>&amp; baseIncludeDirs = {}) <span class="m-label m-flat m-info">explicit</span> </span>
             </dt>
             <dd><span></span></dd>
-            <dt id="ac077f8f248ed21bd8e3fea76cf198dba">
-              Slang::ComPtr&lt;slang::ISession&gt; <a href="#ac077f8f248ed21bd8e3fea76cf198dba" class="m-doc-self">session</a>
+            <dt id="a4e54c3780c0e05d256db854d050072de">
+              <span class="m-doc-wrap-bumper"><a href="#a4e54c3780c0e05d256db854d050072de" class="m-doc-self">Compiler</a>(</span><span class="m-doc-wrap"><a href="classslang__compiler_1_1Compiler.html" class="m-doc">Compiler</a> <a href="logging__macros_8h.html#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">const</a>&amp;) <span class="m-label m-flat m-danger">deleted</span></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a0c64d32a474a368f0e75eeab9a356b78">
+              <span class="m-doc-wrap-bumper"><a href="#a0c64d32a474a368f0e75eeab9a356b78" class="m-doc-self">Compiler</a>(</span><span class="m-doc-wrap"><a href="classslang__compiler_1_1Compiler.html" class="m-doc">Compiler</a>&amp;&amp;) <span class="m-label m-flat m-info">defaulted</span></span>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="pub-methods">
+          <h2><a href="#pub-methods">Public functions</a></h2>
+          <dl class="m-doc">
+            <dt id="aa863f612818ce99feb20d9e9c1833d6b">
+              <span class="m-doc-wrap-bumper">auto <a href="#aa863f612818ce99feb20d9e9c1833d6b" class="m-doc-self">operator=</a>(</span><span class="m-doc-wrap"><a href="classslang__compiler_1_1Compiler.html" class="m-doc">Compiler</a> <a href="logging__macros_8h.html#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">const</a>&amp;) -&gt; <a href="classslang__compiler_1_1Compiler.html" class="m-doc">Compiler</a>&amp; <span class="m-label m-flat m-danger">deleted</span></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a3c554d5a0809e9959ad9958c35ac91c1">
+              <span class="m-doc-wrap-bumper">auto <a href="#a3c554d5a0809e9959ad9958c35ac91c1" class="m-doc-self">operator=</a>(</span><span class="m-doc-wrap"><a href="classslang__compiler_1_1Compiler.html" class="m-doc">Compiler</a>&amp;&amp;) -&gt; <a href="classslang__compiler_1_1Compiler.html" class="m-doc">Compiler</a>&amp; <span class="m-label m-flat m-info">defaulted</span></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="aaffdbede0815ebee78168c75dfd9c2f6">
+              <span class="m-doc-wrap-bumper">auto <a href="#aaffdbede0815ebee78168c75dfd9c2f6" class="m-doc-self">CreateProgram</a>(</span><span class="m-doc-wrap">std::string <a href="logging__macros_8h.html#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">const</a>&amp; moduleName,
+              std::string <a href="logging__macros_8h.html#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">const</a>&amp; entryPoint,
+              std::vector&lt;std::string&gt; <a href="logging__macros_8h.html#a9d1fa3196d7554630c610b61d2e36e9e" class="m-doc">const</a>&amp; extraIncludeDirs = {}) const -&gt; <a href="structslang__compiler_1_1SlangProgram.html" class="m-doc">SlangProgram</a></span>
             </dt>
             <dd><span></span></dd>
           </dl>
