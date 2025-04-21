@@ -9,7 +9,7 @@
 
 #include "lib.hpp"
 #include "logging_macros.h"
-#include "shaders/gpu-printing.h"
+#include "shaders/tools/gpu-printing.h"
 #include "slang_compiler.hpp"
 
 int main(int /*argc*/, char** /*argv*/)

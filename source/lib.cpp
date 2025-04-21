@@ -60,9 +60,11 @@ wgpu::Adapter Library::RequestAdapter(wgpu::Instance instance)
             UINT64_MAX);
 
         if (adapter) {
-            LOG_WARN(
-                "Selected adapter with {} feature level",
-                level == wgpu::FeatureLevel::Core ? "Core" : "Compatibility");
+            if (level == wgpu::FeatureLevel::Core) {
+                LOG_INFO("Selected adapter with Core feature level");
+            } else {
+                LOG_WARN("Selected adapter with Compatibility feature level");
+            }
             return adapter;
         }
     }
