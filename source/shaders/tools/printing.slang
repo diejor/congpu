@@ -341,6 +341,21 @@ extension String : IPrintf
     }
 }
 
+extension float : IPrintf
+{
+    // one 32-bit word per float
+    uint getPrintfWordCount() { return 1; }
+
+    // bit-cast the IEEE-754 bits into a u32 payload
+    void writePrintfWords(RWStructuredBuffer<Atomic<uint>> buffer, uint offset)
+    {
+        // Slang’s bitcast preserves the raw bits
+        let bits = reinterpret<uint>(this);
+        buffer[offset] = bits;
+    }
+}
+
+
 
 // A `printf()` with no format arguments can just call back to `_beginPrintf()`
 void printf_(String format)

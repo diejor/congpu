@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <filesystem>
-#include <iostream>
+#include <span>
+#include <vector>
 
 #include <dawn/webgpu_cpp_print.h>
 #include <tracy/Tracy.hpp>
@@ -11,6 +12,12 @@
 #include "logging_macros.h"
 #include "shaders/tools/gpu-printing.h"
 #include "slang_compiler.hpp"
+
+template<typename T, std::size_t B>
+struct Align
+{
+    alignas(B) T value;
+};
 
 int main(int /*argc*/, char** /*argv*/)
 {
@@ -46,10 +53,36 @@ int main(int /*argc*/, char** /*argv*/)
 
     std::string wgslSource = slangProgram.compileToWGSL();
 
-    // LOG_TRACE("WGSL source:\n{}", wgslSource);
+    LOG_TRACE("WGSL source:\n{}", wgslSource);
 
     GPUPrinting gpuPrinting;
     gpuPrinting.loadStrings(slangProgram.program->getLayout());
+
+
+    Align<uint32_t, 4> parameters[4] = {2, 3, 2*3};
+    LOG_WARN("Shape size: {}", sizeof(parameters));
+
+    wgpu::BufferDescriptor buffer0Desc = {
+        .label = "Size parameters",
+        .usage = wgpu::BufferUsage::Uniform | wgpu::BufferUsage::CopySrc
+            | wgpu::BufferUsage::CopyDst,
+        .size = sizeof(parameters),
+        .mappedAtCreation = false,
+    };
+    wgpu::Buffer buffer0 = device.CreateBuffer(&buffer0Desc);
+    queue.WriteBuffer(buffer0, 0, parameters, sizeof(parameters));
+
+    Align<float, 4> data[12] = {2, 3, 4, 5, 6, 7, 8, 9};
+    wgpu::BufferDescriptor buffer1Desc = {
+        .label = "Buffer",
+        .usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc
+            | wgpu::BufferUsage::CopyDst,
+        .size = sizeof(data),
+        .mappedAtCreation = false,
+    };
+
+    wgpu::Buffer buffer1 = device.CreateBuffer(&buffer1Desc);
+    queue.WriteBuffer(buffer1, 0, data, sizeof(data));
 
     size_t printBufferSize = 4 * 1024;
 
@@ -61,12 +94,8 @@ int main(int /*argc*/, char** /*argv*/)
         .mappedAtCreation = false,
     };
     wgpu::Buffer printBuffer = device.CreateBuffer(&printBufferDesc);
-
     uint32_t zero = 0;
-    queue.WriteBuffer(printBuffer,
-                      /*bufferOffset=*/0,
-                      &zero,
-                      /*size=*/sizeof(zero));
+    queue.WriteBuffer(printBuffer, 0, &zero, sizeof(zero));
 
     wgpu::BufferDescriptor mapBufferDesc = {
         .label = "Map Buffer",
@@ -77,18 +106,50 @@ int main(int /*argc*/, char** /*argv*/)
 
     wgpu::Buffer mapBuffer = device.CreateBuffer(&mapBufferDesc);
 
-    wgpu::BindGroupEntry bindGroupEntries[1] = {
+    wgpu::BindGroupEntry bindGroupEntries[3] = {
         {
             .binding = 0,
+            .buffer = buffer0,
+            .offset = 0,
+            .size = sizeof(parameters),
+        },
+        {
+            .binding = 1,
+            .buffer = buffer1,
+            .offset = 0,
+            .size = sizeof(data)
+        },
+        {
+            .binding = 2,
             .buffer = printBuffer,
             .offset = 0,
             .size = printBufferSize,
         },
     };
 
-    wgpu::BindGroupLayoutEntry bindGroupLayoutEntries[1] = {
+    wgpu::BindGroupLayoutEntry bindGroupLayoutEntries[3] = {
         {
             .binding = 0,
+            .visibility = wgpu::ShaderStage::Compute,
+            .buffer =
+                {
+                    .type = wgpu::BufferBindingType::Uniform,
+                    .hasDynamicOffset = false,
+                    .minBindingSize = 0,
+                },
+        },
+        {
+            .binding = 1,
+            .visibility = wgpu::ShaderStage::Compute,
+            .buffer =
+                {
+                    .type = wgpu::BufferBindingType::Storage,
+                    .hasDynamicOffset = false,
+                    .minBindingSize = 0,
+                },
+        },
+        {
+            .binding = 2,
             .visibility = wgpu::ShaderStage::Compute,
             .buffer =
                 {
@@ -101,7 +162,7 @@ int main(int /*argc*/, char** /*argv*/)
 
     wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc = {
         .label = "Bind Group Layout",
-        .entryCount = 1,
+        .entryCount = 3,
         .entries = bindGroupLayoutEntries,
     };
 
@@ -111,7 +172,7 @@ int main(int /*argc*/, char** /*argv*/)
     wgpu::BindGroupDescriptor bindGroupDesc = {
         .label = "Bind Group",
         .layout = bindGroupLayout,
-        .entryCount = 1,
+        .entryCount = 3,
         .entries = bindGroupEntries,
     };
 
@@ -167,7 +228,7 @@ int main(int /*argc*/, char** /*argv*/)
 
     computePassEncoder.SetPipeline(computePipeline);
     computePassEncoder.SetBindGroup(0, bindGroup);
-    computePassEncoder.DispatchWorkgroups(4, 4, 1);
+    computePassEncoder.DispatchWorkgroups(2, 3, 1);
     computePassEncoder.End();
 
     commandEncoder.CopyBufferToBuffer(
@@ -200,4 +261,5 @@ int main(int /*argc*/, char** /*argv*/)
                                              mapCallback);
 
     instance.WaitAny(handle, UINT64_MAX);
+    
 }

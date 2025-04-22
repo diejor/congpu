@@ -1,8 +1,30 @@
 // gpu-printing.cppgpu-
+#include <cstdio>
+
 #include "gpu-printing.h"
 
 #include <assert.h>
 #include <string.h>
+
+inline void printValue(int v)
+{
+    std::printf("%d", v);
+}
+
+inline void printValue(unsigned v)
+{
+    std::printf("%u", v);
+}
+
+inline void printValue(float v)
+{
+    std::printf("%f", static_cast<double>(v));
+}
+
+inline void printValue(double v)
+{
+    std::printf("%f", v);
+}
 
 // This file implements the CPU side of a simple GPU printing
 // library. The CPU code is responsible for scanning through
@@ -179,18 +201,19 @@ void GPUPrinting::processGPUPrintCommands(const void* data, size_t dataSize)
                 //
                 // We will use a macro to avoid duplication the code shared
                 // between these cases.
-                //
-#define CASE(OP, FORMAT, TYPE) \
+#undef CASE
+#define CASE(OP, TYPE) \
     case GPUPrintingOp::OP: { \
         TYPE value; \
-        assert(payloadWordCount >= (sizeof(value) / sizeof(uint32_t))); \
-        memcpy(&value, payloadWords, sizeof(value)); \
-        printf(FORMAT, value); \
+        assert(payloadWordCount >= (sizeof(TYPE) / 4)); \
+        memcpy(&value, payloadWords, sizeof(TYPE)); \
+        payloadWords += sizeof(TYPE) / 4; \
+        printValue(value); \
     } break
 
-                CASE(Int32, "%d", int);
-                CASE(UInt32, "%u", unsigned int);
-                CASE(Float32, "%f", double);
+                CASE(Int32, int);
+                CASE(UInt32, unsigned);
+                CASE(Float32, float);
 
 #undef CASE
 
@@ -333,33 +356,33 @@ void GPUPrinting::processGPUPrintCommands(const void* data, size_t dataSize)
                             // use a macro to capture the shared code for
                             // common cases.
                             //
-#define CASE(CHAR, FORMAT, TYPE) \
-    case CHAR: { \
-        assert(payloadWords != payloadWordsEnd); \
+#define CASE(CH, TYPE) \
+    case CH: { \
+        constexpr size_t WORDS = sizeof(TYPE) / sizeof(uint32_t); \
+        assert(payloadWords + WORDS <= payloadWordsEnd); \
         TYPE value; \
-        memcpy(&value, payloadWords, sizeof(value)); \
-        payloadWords += sizeof(value) / sizeof(uint32_t); \
-        printf(FORMAT, value); \
+        memcpy(&value, payloadWords, sizeof(TYPE)); \
+        payloadWords += WORDS; \
+        printValue(value); \
     } break
 
-                        case 'i':    // `%i` is just an alias for `%d`
-                            CASE('d', "%d", int);
-                            CASE('u', "%u", unsigned int);
-                            CASE('x', "%x", unsigned int);
-                            CASE('X', "%X", unsigned int);
+                        case 'i':    // alias for %d
+                            CASE('d', int);
+                            break;
+                            CASE('u', unsigned);
+                            CASE('x', unsigned);
+                            CASE('X', unsigned);
 
-                            // Note: all of our printing support for
-                            // floating-point values will use the `float` type
-                            // instead of `double`. This isn't compatible with C
-                            // rules, but makes more sense for GPU code.
-                            //
-                            CASE('f', "%f", double);
-                            CASE('F', "%F", double);
-                            CASE('e', "%e", double);
-                            CASE('E', "%E", double);
-                            CASE('g', "%g", double);
-                            CASE('G', "%G", double);
-                            CASE('c', "%c", int);
+                            // Floats auto-promote inside printValue():
+                            CASE('f', float);
+                            CASE('F', float);
+                            CASE('e', float);
+                            CASE('E', float);
+                            CASE('g', float);
+                            CASE('G', float);
+
+                            // Char → int:
+                            CASE('c', int);
 
 #undef CASE
 

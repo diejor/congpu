@@ -85,12 +85,10 @@ SlangProgram Compiler::CreateProgram(
     std::string const& entryPoint,
     std::vector<std::string> const& extraIncludeDirs) const
 {
-    // 1. ---- build search path list ------------------------------------------
     std::vector<std::string> searchPaths = m_baseIncludeDirs;
     searchPaths.insert(
         searchPaths.end(), extraIncludeDirs.begin(), extraIncludeDirs.end());
 
-    // 2. ---- create a per‑compile ISession -----------------------------------
     ComPtr<slang::ISession> session =
         createSession(m_globalSession, searchPaths);
     if (!session) {
@@ -98,8 +96,6 @@ SlangProgram Compiler::CreateProgram(
         return {};
     }
 
-    // 3. ---- load module
-    // ------------------------------------------------------
     ComPtr<slang::IModule> module;
     {
         ComPtr<slang::IBlob> diagnosticsBlob;
@@ -113,7 +109,6 @@ SlangProgram Compiler::CreateProgram(
         LOG_TRACE("Loaded module: {}", moduleName);
     }
 
-    // 4. ---- find entry point + composite component --------------------------
     ComPtr<slang::IEntryPoint> entry;
     module->findEntryPointByName(entryPoint.c_str(), entry.writeRef());
 
@@ -134,8 +129,6 @@ SlangProgram Compiler::CreateProgram(
         LOG_TRACE("Created composite component");
     }
 
-    // 5. ---- link
-    // -------------------------------------------------------------
     ComPtr<slang::IComponentType> linked;
     {
         ComPtr<slang::IBlob> diagnosticsBlob;
@@ -148,7 +141,6 @@ SlangProgram Compiler::CreateProgram(
         LOG_TRACE("Linked program");
     }
 
-    // 6. ---- package everything into SlangProgram ----------------------------
     return SlangProgram {.session = std::move(session),
                          .module = std::move(module),
                          .program = std::move(linked)};

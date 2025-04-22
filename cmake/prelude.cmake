@@ -8,3 +8,4 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
       "You may need to delete 'CMakeCache.txt' and 'CMakeFiles/' first."
   )
 endif()
+

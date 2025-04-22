@@ -16,6 +16,3 @@ class Recipe(ConanFile):
 
     def build_requirements(self):
         self.test_requires("catch2/3.7.1")
-
-    def configure(self):
-        self.settings.compiler.cppstd = "20"
