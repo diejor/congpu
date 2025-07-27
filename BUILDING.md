@@ -7,7 +7,10 @@ For a list of dependencies, please refer to [conanfile.py](conanfile.py).
 ## Build
 
 This project doesn't require any special command-line flags to build to keep
-things simple.
+things simple, but it does rely on [conan](https://conan.io/) to provide third
+party dependencies.  CMake will automatically invoke `conan install` to create
+the toolchain file if it is missing.  The following commands build the project
+using a single-configuration generator such as Unix Makefiles:
 
 Here are the steps for building in release mode with a single-configuration
 generator, like the Unix Makefiles one:

@@ -59,7 +59,7 @@ int main(int /*argc*/, char** /*argv*/)
     gpuPrinting.loadStrings(slangProgram.program->getLayout());
 
 
-    Align<uint32_t, 4> parameters[4] = {2, 3, 2*3};
+    Align<uint32_t, 4> parameters[4] = {3, 4, 3*4};
     LOG_WARN("Shape size: {}", sizeof(parameters));
 
     wgpu::BufferDescriptor buffer0Desc = {
@@ -72,7 +72,7 @@ int main(int /*argc*/, char** /*argv*/)
     wgpu::Buffer buffer0 = device.CreateBuffer(&buffer0Desc);
     queue.WriteBuffer(buffer0, 0, parameters, sizeof(parameters));
 
-    Align<float, 4> data[12] = {2, 3, 4, 5, 6, 7, 8, 9};
+    Align<float, 4> data[12] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
     wgpu::BufferDescriptor buffer1Desc = {
         .label = "Buffer",
         .usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc
@@ -228,7 +228,7 @@ int main(int /*argc*/, char** /*argv*/)
 
     computePassEncoder.SetPipeline(computePipeline);
     computePassEncoder.SetBindGroup(0, bindGroup);
-    computePassEncoder.DispatchWorkgroups(2, 3, 1);
+    computePassEncoder.DispatchWorkgroups(3, 4, 1);
     computePassEncoder.End();
 
     commandEncoder.CopyBufferToBuffer(

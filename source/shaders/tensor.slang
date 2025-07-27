@@ -1,32 +1,20 @@
-interface IIndexable {
-    uint index();
-}
-
-extension uint : IIndexable
-{
-    uint index()
-    {
-        return this;
-    }
-}
-
 interface IShape<each I>
-    where I : IIndexable
+    where I : IInteger
 {
-    uint flatIndex(expand each I);
+    uint element(expand each I);
 }
 
 struct Shape<each I> : IShape<expand each I> 
-    where I : IIndexable
+    where I : IInteger
 {
     Tuple<expand each I> shape;
 
-    static void stepDimension<T : IIndexable>(inout uint acc, T dimSize, T idx)
+    static void stepDimension<T : IInteger>(inout uint acc, T dimSize, T idx)
     {
-        acc = acc * dimSize.index() + idx.index();
+        acc = acc * dimSize.toUInt() + idx.toUInt();
     }
 
-    uint flatIndex(expand each I indices)
+    uint element(expand each I indices)
     {
         uint offset = 0;
         expand stepDimension(offset, each shape, each indices);
@@ -36,13 +24,13 @@ struct Shape<each I> : IShape<expand each I>
 }
 
 interface ITensor<T, each I>
-    where I : IIndexable
+    where I : IInteger
 {
     __subscript(expand each I args) -> T;
 };
 
 struct Tensor<T, each I> : ITensor<T, expand each I>
-    where I : IIndexable
+    where I : IInteger
 {
     RWStructuredBuffer<T> data;
     Shape<expand each I> shape;
@@ -51,11 +39,11 @@ struct Tensor<T, each I> : ITensor<T, expand each I>
     {
         get 
         { 
-            return data[shape.flatIndex(expand each indices)];
+            return data[shape.element(expand each indices)];
         }
         set 
         { 
-            data[shape.flatIndex(expand each indices)] = newValue;
+            data[shape.element(expand each indices)] = newValue;
         }
     }
 }

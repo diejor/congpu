@@ -43,7 +43,7 @@ the project:
       "binaryDir": "${sourceDir}/build/dev",
       "inherits": ["dev-mode", "conan", "ci-<os>"],
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     }
   ],
@@ -51,14 +51,14 @@ the project:
     {
       "name": "dev",
       "configurePreset": "dev",
-      "configuration": "Debug"
+      "configuration": "Release"
     }
   ],
   "testPresets": [
     {
       "name": "dev",
       "configurePreset": "dev",
-      "configuration": "Debug",
+      "configuration": "Release",
       "output": {
         "outputOnFailure": true
       }
@@ -89,10 +89,10 @@ in the terminal.
 
 ### Dependency manager
 
-The above preset will make use of the [conan][conan] dependency manager. After
-installing it, make sure you have a [Conan profile][profile] setup, then
-download the dependencies and generate the necessary CMake files by running
-this command in the project root:
+The above preset will make use of the [conan][conan] dependency manager.
+Configuration automatically invokes `conan install` when the generated
+toolchain file is missing.  Make sure you have a [Conan profile][profile]
+set up.  You can also run the command manually to refresh the dependencies:
 
 ```sh
 conan install . -s build_type=Debug -b missing
