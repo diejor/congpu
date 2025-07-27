@@ -9,5 +9,6 @@ void computeMain(uint3 threadId : SV_DispatchThreadID)
 {
     printf_("Element 0: %f\n", tensorA[0, 3]);
     printf_("Element 1: %f\n", tensorB[1, 3]);
+    printf_("Element 0: %f\n", tensorA[threadId.x, threadId.y]);
 }
 

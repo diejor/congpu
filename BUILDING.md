@@ -7,7 +7,11 @@ For a list of dependencies, please refer to [conanfile.py](conanfile.py).
 ## Build
 
 This project doesn't require any special command-line flags to build to keep
-things simple.
+things simple. Third party dependencies are handled automatically by
+[conan](https://conan.io/), which will be invoked by the build system if the
+generated toolchain file is missing.  Ensure both `cmake` and `conan` are
+available in your `PATH`; the commands below work the same on Windows, macOS
+and Linux.
 
 Here are the steps for building in release mode with a single-configuration
 generator, like the Unix Makefiles one:
@@ -24,6 +28,11 @@ generator, like the Visual Studio ones:
 cmake -S . -B build
 cmake --build build --config Release
 ```
+
+If you prefer to provide the dependencies yourself instead of using Conan,
+disable the integration by adding `-D CONGPU_USE_CONAN=OFF` to the configure
+command.  In that case, ensure all third-party packages can be located by
+`find_package`.
 
 ### Building with MSVC
 

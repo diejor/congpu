@@ -43,7 +43,7 @@ the project:
       "binaryDir": "${sourceDir}/build/dev",
       "inherits": ["dev-mode", "conan", "ci-<os>"],
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     }
   ],
@@ -51,14 +51,14 @@ the project:
     {
       "name": "dev",
       "configurePreset": "dev",
-      "configuration": "Debug"
+      "configuration": "Release"
     }
   ],
   "testPresets": [
     {
       "name": "dev",
       "configurePreset": "dev",
-      "configuration": "Debug",
+      "configuration": "Release",
       "output": {
         "outputOnFailure": true
       }
@@ -89,10 +89,21 @@ in the terminal.
 
 ### Dependency manager
 
-The above preset will make use of the [conan][conan] dependency manager. After
-installing it, make sure you have a [Conan profile][profile] setup, then
-download the dependencies and generate the necessary CMake files by running
-this command in the project root:
+The above preset relies on the [conan][conan] dependency manager.  If the
+generated toolchain file is missing when CMake is invoked, the build scripts
+will automatically call `conan install` for you using the current build type,
+unless the option `CONGPU_USE_CONAN` is set to `OFF`. Disabling this option lets
+you supply the third-party libraries yourself and have CMake locate them via
+`find_package`.
+
+You can override the option from the command line, for example:
+
+```sh
+cmake --preset=dev -D CONGPU_USE_CONAN=OFF
+```
+
+You can still run `conan install` manually if you want to prefetch the
+dependencies; the invocation is the same on Windows, macOS and Linux:
 
 ```sh
 conan install . -s build_type=Debug -b missing

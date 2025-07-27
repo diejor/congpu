@@ -1,9 +1,14 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.23)
 
 # option(TRACY_ENABLE "Enable Tracy profiler" ON)
 # option(TRACY_ON_DEMAND "Enable Tracy profiler on demand" ON)
 
 include(cmake/prelude.cmake)
+
+option(CONGPU_USE_CONAN "Use Conan to manage third-party dependencies" ON)
+if(CONGPU_USE_CONAN)
+  include(cmake/conan.cmake)
+endif()
 
 project(
     congpu
@@ -19,7 +24,7 @@ include(cmake/copy-runtime-libs.cmake)
 # ---- Declare library ----
 
 add_library(
-    congpu_lib OBJECT
+    congpu_lib STATIC
     source/lib.cpp
     source/slang_compiler.cpp
     source/shaders/tools/gpu-printing.cpp
