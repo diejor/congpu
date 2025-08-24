@@ -1,12 +1,11 @@
 import tools.printing;
 import tensor;
 
-Tensor<float, uint, uint> tensorA;
+Tensor<float, int, int> tensorA;
 
 [numthreads(1,1,1)]
 void computeMain(uint3 threadId : SV_DispatchThreadID)
 {
-    printf_("Element 0: %f\n", tensorA[0, 3]);
-    printf_("Element 0: %f\n", tensorA[threadId.x, threadId.y]);
+    printf_("Element %d, %d: %f\n", threadId.x, threadId.y,  tensorA[threadId.x, threadId.y]);
 }
 

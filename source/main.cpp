@@ -1,3 +1,5 @@
+#include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <span>
@@ -12,6 +14,7 @@
 #include "logging_macros.h"
 #include "shaders/tools/gpu-printing.h"
 #include "slang_compiler.hpp"
+#include "std140.hpp"
 
 template<typename T, std::size_t B>
 struct Align
@@ -58,19 +61,29 @@ int main(int /*argc*/, char** /*argv*/)
     GPUPrinting gpuPrinting;
     gpuPrinting.loadStrings(slangProgram.program->getLayout());
 
-
-    Align<uint32_t, 4> parameters[4] = {3, 4, 3*4};
-    LOG_WARN("Shape size: {}", sizeof(parameters));
+    std140::Encoder encoder;
+    {
+        auto tensor = encoder.beginStruct();
+        encoder.write<int32_t>(12);
+        auto shape = encoder.beginStruct();
+        {
+            auto tuple = encoder.beginStruct();
+            encoder.write<int32_t>(3);
+            encoder.write<int32_t>(4);
+        }
+    }
+    const std::vector<std::byte>& parameters = encoder.data();
+    LOG_WARN("Shape size: {}", parameters.size());
 
     wgpu::BufferDescriptor buffer0Desc = {
         .label = "Size parameters",
         .usage = wgpu::BufferUsage::Uniform | wgpu::BufferUsage::CopySrc
             | wgpu::BufferUsage::CopyDst,
-        .size = sizeof(parameters),
+        .size = parameters.size(),
         .mappedAtCreation = false,
     };
     wgpu::Buffer buffer0 = device.CreateBuffer(&buffer0Desc);
-    queue.WriteBuffer(buffer0, 0, parameters, sizeof(parameters));
+    queue.WriteBuffer(buffer0, 0, parameters.data(), parameters.size());
 
     Align<float, 4> data[12] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
     wgpu::BufferDescriptor buffer1Desc = {
@@ -111,14 +124,9 @@ int main(int /*argc*/, char** /*argv*/)
             .binding = 0,
             .buffer = buffer0,
             .offset = 0,
-            .size = sizeof(parameters),
+            .size = parameters.size(),
         },
-        {
-            .binding = 1,
-            .buffer = buffer1,
-            .offset = 0,
-            .size = sizeof(data)
-        },
+        {.binding = 1, .buffer = buffer1, .offset = 0, .size = sizeof(data)},
         {
             .binding = 2,
             .buffer = printBuffer,
@@ -261,5 +269,4 @@ int main(int /*argc*/, char** /*argv*/)
                                              mapCallback);
 
     instance.WaitAny(handle, UINT64_MAX);
-    
 }
