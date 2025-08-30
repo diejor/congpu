@@ -1,12 +1,13 @@
-interface IShape<each I>
+internal interface IShape<each I>
     where I : IInteger {
     uint element(expand each I);
 }
 
-struct Shape<each I> : IShape<expand each I> 
+internal struct Shape<each I> : IShape<expand each I> 
     where I : IInteger {
-    int size;
-    Tuple<expand each I> shape;
+
+    private Tuple<expand each I> shape;
+    internal int size;
 
     static void stepDimension<T : IInteger>(inout uint acc, T dimSize, T idx) {
         acc = acc * dimSize.toUInt() + idx.toUInt();
@@ -20,17 +21,17 @@ struct Shape<each I> : IShape<expand each I>
     }
 }
 
-interface ITensor<T, each I>
+public interface ITensor<T, each I>
     where I : IInteger {
     __subscript(expand each I args) -> T;
 };
 
-struct Tensor<T, each I> : ITensor<T, expand each I>
+public struct Tensor<T, each I> : ITensor<T, expand each I>
     where I : IInteger {
-    RWStructuredBuffer<T> data;
-    Shape<expand each I> shape;
+    internal RWStructuredBuffer<T> data;
+    internal Shape<expand each I> shape;
     
-    __subscript(expand each I indices) -> T {
+    public __subscript(expand each I indices) -> T {
         get { 
             return data[shape.element(expand each indices)];
         }
@@ -40,22 +41,15 @@ struct Tensor<T, each I> : ITensor<T, expand each I>
     }
 }
 
-extension<T, each I> Tensor<T, expand each I> : IArray<T>, IRWArray<T>
-    where I : IInteger
-{
-    __subscript(uint i) -> T
-    {
+public extension<T, each I> Tensor<T, expand each I> : IArray<T>, IRWArray<T>
+    where I : IInteger {
+    public __subscript(uint i) -> T {
         get { return data[i]; }
         set { data[i] = newValue; }
     }
 
-    static void mulDim<TI : IInteger>(inout uint acc, TI d) { acc *= d.toUInt(); }
-
-    int getCount()
-    {
-        uint n = 1;
-        expand mulDim(n, each shape.shape);
-        return int(n);
+    public int getCount() {
+        return shape.size;
     }
 }
 

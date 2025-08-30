@@ -63,14 +63,13 @@ int main(int /*argc*/, char** /*argv*/)
 
     std140::Encoder encoder;
     {
-        auto tensor = encoder.beginStruct();
-        encoder.write<int32_t>(12);
         auto shape = encoder.beginStruct();
         {
             auto tuple = encoder.beginStruct();
             encoder.write<int32_t>(3);
             encoder.write<int32_t>(4);
         }
+        encoder.write<int32_t>(12);
     }
     const std::vector<std::byte>& parameters = encoder.data();
     LOG_WARN("Shape size: {}", parameters.size());
