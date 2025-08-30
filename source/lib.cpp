@@ -17,10 +17,7 @@ wgpu::Instance Library::CreateInstance()
 {
     ZoneScoped;
     wgpu::InstanceDescriptor instanceDescriptor {};
-    instanceDescriptor.requiredFeatureCount = 1;
-    wgpu::InstanceFeatureName requiredFeatures[1] = {
-        wgpu::InstanceFeatureName::TimedWaitAny};
-    instanceDescriptor.requiredFeatures = requiredFeatures;
+    instanceDescriptor.capabilities.timedWaitAnyEnable = true;
     wgpu::Instance instance = wgpu::CreateInstance(&instanceDescriptor);
     if (instance == nullptr) {
         LOG_ERROR("Failed to create an instance!");
