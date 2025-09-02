@@ -197,7 +197,7 @@ jobs:
           fi
 
       - name: Build
-        run: cmake --build build --config Release -j "$(nproc)"
+        run: cmake --build build --config Release -j "$(sysctl -n hw.logicalcpu)"
 
       - name: Install
         run: cmake --install build --config Release --prefix prefix
