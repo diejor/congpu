@@ -150,7 +150,7 @@ jobs:
     needs: [ lint ]
     strategy:
       matrix:
-        os: [ macos-14, ubuntu-24.04, windows-2022 ]
+        os: [ macos-latest, ubuntu-24.04, windows-2022 ]
     runs-on: ${{ matrix.os }}
     # Force Dawn to use D3D12 on Windows; empty elsewhere
     env:
