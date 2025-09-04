@@ -175,8 +175,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          choco install -y directx
-          choco install -y vulkan-sdk
+          choco install -y --no-progress directx
 
       - uses: actions/setup-python@v5
         with:
