@@ -171,12 +171,6 @@ jobs:
             libxcb1-dev libxcb-keysyms1-dev \
             clang-tidy-18 cppcheck
 
-      - name: Windows system dependencies
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          choco install -y --no-progress directx
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -207,14 +201,6 @@ jobs:
 
       - name: Install
         run: cmake --install build --config Release --prefix prefix
-
-      - name: Provide d3dcompiler
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $dll = "$env:SystemRoot\\System32\\d3dcompiler_47.dll"
-          Copy-Item $dll "$env:GITHUB_WORKSPACE\\prefix\\bin"
-          echo "$env:GITHUB_WORKSPACE\\prefix\\bin" >> $env:GITHUB_PATH
 
       - name: Test
         working-directory: build
