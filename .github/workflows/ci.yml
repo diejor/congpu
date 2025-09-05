@@ -208,6 +208,14 @@ jobs:
       - name: Install
         run: cmake --install build --config Release --prefix prefix
 
+      - name: Provide d3dcompiler
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $dll = "$env:SystemRoot\\System32\\d3dcompiler_47.dll"
+          Copy-Item $dll "$env:GITHUB_WORKSPACE\\prefix\\bin"
+          echo "$env:GITHUB_WORKSPACE\\prefix\\bin" >> $env:GITHUB_PATH
+
       - name: Test
         working-directory: build
         run: ctest --output-on-failure --no-tests=error -C Release -j "$(nproc)"
