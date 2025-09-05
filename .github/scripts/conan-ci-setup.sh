@@ -46,7 +46,8 @@ if [[ "${RUNNER_OS:-}" == "Windows" ]]; then
   echo "=== Windows CI: forcing D3D12, disabling Vulkan ==="
   conan install . -b missing \
     -o dawn/*:force_vulkan=False \
-    -o dawn/*:force_d3d12=True
+    -o dawn/*:force_d3d12=True \
+    -o dawn/*:force_system_component_load=True
 else
   conan install . -b missing
 fi
