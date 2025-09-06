@@ -23,7 +23,7 @@ TEST_CASE("Simple single buffer", "[library]")
     // Get the default queue.
     wgpu::Queue queue = device.GetQueue();
 
-    std::filesystem::path path(SHADERS_DIR);
+    std::filesystem::path path(TEST_SHADERS_DIR);
     slang_compiler::Compiler compiler({path.string()});
 
     slang_compiler::SlangProgram program =
