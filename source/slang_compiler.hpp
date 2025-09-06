@@ -34,6 +34,13 @@ class Compiler
         std::string const& entryPoint,
         std::vector<std::string> const& extraIncludeDirs = {}) const;
 
+    [[nodiscard]]
+    SlangProgram CompileFromSource(
+        std::string const& source,
+        std::string const& moduleName,
+        std::string const& entryPoint,
+        std::vector<std::string> const& extraIncludeDirs = {}) const;
+
   private:
     Slang::ComPtr<slang::IGlobalSession> m_globalSession;
     std::vector<std::string> m_baseIncludeDirs;

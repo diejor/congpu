@@ -23,13 +23,29 @@ TEST_CASE("Simple single buffer", "[library]")
     // Get the default queue.
     wgpu::Queue queue = device.GetQueue();
 
-    std::filesystem::path path(SHADERS_DIR);
-    slang_compiler::Compiler compiler({path.string()});
+    const char* shaderSource = R"(
+StructuredBuffer<float> buffer0;
+RWStructuredBuffer<float> result;
 
-    slang_compiler::SlangProgram program =
-        compiler.CreateProgram("single-buffer", "computeMain");
+float f(float a)
+{
+    return pow(a, 2.0f) + 1.0f;
+}
 
-    // Compile the Slang source to WGSL.
+[shader("compute")]
+[numthreads(1,1,1)]
+void computeMain(uint3 threadId : SV_DispatchThreadID)
+{
+    let index = threadId.x;
+    result[index] = f(buffer0[index]);
+}
+)";
+
+    slang_compiler::Compiler compiler;
+
+    slang_compiler::SlangProgram program = compiler.CompileFromSource(
+        shaderSource, "single-buffer", "computeMain");
+
     std::string wgslSource = program.compileToWGSL();
 
     std::vector<float> data1 = {1.0f, 2.0f, 3.0f, 4.0f};

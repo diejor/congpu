@@ -145,3 +145,74 @@ SlangProgram Compiler::CreateProgram(
                          .module = std::move(module),
                          .program = std::move(linked)};
 }
+
+SlangProgram Compiler::CompileFromSource(
+    std::string const& source,
+    std::string const& moduleName,
+    std::string const& entryPoint,
+    std::vector<std::string> const& extraIncludeDirs) const
+{
+    std::vector<std::string> searchPaths = m_baseIncludeDirs;
+    searchPaths.insert(
+        searchPaths.end(), extraIncludeDirs.begin(), extraIncludeDirs.end());
+
+    ComPtr<slang::ISession> session =
+        createSession(m_globalSession, searchPaths);
+    if (!session) {
+        LOG_ERROR("Failed to create Slang session");
+        return {};
+    }
+
+    ComPtr<slang::IModule> module;
+    {
+        ComPtr<slang::IBlob> diagnosticsBlob;
+        //
+        module =
+            session->loadModuleFromSourceString(moduleName.c_str(),
+                                                /* path */ nullptr,
+                                                source.c_str(),
+                                                diagnosticsBlob.writeRef());
+        diagnoseIfNeeded(diagnosticsBlob);
+        if (!module) {
+            LOG_ERROR("Failed to load module from source: {}", moduleName);
+            return {};
+        }
+        LOG_TRACE("Loaded module from source: {}", moduleName);
+    }
+
+    ComPtr<slang::IEntryPoint> entry;
+    module->findEntryPointByName(entryPoint.c_str(), entry.writeRef());
+
+    std::array<slang::IComponentType*, 2> parts {module.get(), entry.get()};
+
+    ComPtr<slang::IComponentType> composite;
+    {
+        ComPtr<slang::IBlob> diagnosticsBlob;
+        session->createCompositeComponentType(parts.data(),
+                                              parts.size(),
+                                              composite.writeRef(),
+                                              diagnosticsBlob.writeRef());
+        diagnoseIfNeeded(diagnosticsBlob);
+        if (!composite) {
+            LOG_ERROR("Failed to create composite component");
+            return {};
+        }
+        LOG_TRACE("Created composite component");
+    }
+
+    ComPtr<slang::IComponentType> linked;
+    {
+        ComPtr<slang::IBlob> diagnosticsBlob;
+        composite->link(linked.writeRef(), diagnosticsBlob.writeRef());
+        diagnoseIfNeeded(diagnosticsBlob);
+        if (!linked) {
+            LOG_ERROR("Failed to link program");
+            return {};
+        }
+        LOG_TRACE("Linked program");
+    }
+
+    return SlangProgram {.session = std::move(session),
+                         .module = std::move(module),
+                         .program = std::move(linked)};
+}
