@@ -45,6 +45,7 @@ add_library(
     congpu_lib OBJECT
     source/lib.cpp
     source/slang_compiler.cpp
+    source/tensor_reflection.cpp
     source/shaders/tools/gpu-printing.cpp
 )
 
