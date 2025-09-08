@@ -23,4 +23,3 @@ struct PrintBufferReflection
     slang::IComponentType* program, const std::string& name = "gPrintBuffer");
 
 }    // namespace print_reflection
-

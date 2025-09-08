@@ -38,8 +38,8 @@ void computeMain(uint3 tid: SV_DispatchThreadID, uint3 ltid : SV_GroupThreadID)
 )";
 
     slang_compiler::Compiler compiler({SHADERS_DIR});
-    auto prog = compiler.CompileFromSource(
-        shader, "tensor-buffer", "computeMain");
+    auto prog =
+        compiler.CompileFromSource(shader, "tensor-buffer", "computeMain");
 
     auto infoOpt =
         tensor_reflection::ReflectTensorBuffer(prog.program.get(), "input");

@@ -1,3 +1,4 @@
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -12,15 +13,13 @@
 
 #include "lib.hpp"
 #include "logging_macros.h"
+#include "print_buffer.hpp"
+#include "print_reflection.hpp"
 #include "shaders/tools/gpu-printing.h"
 #include "slang_compiler.hpp"
 #include "std140.hpp"
-
-template<typename T, std::size_t B>
-struct Align
-{
-    alignas(B) T value;
-};
+#include "tensor_buffer.hpp"
+#include "tensor_reflection.hpp"
 
 int main(int /*argc*/, char** /*argv*/)
 {
@@ -61,6 +60,27 @@ int main(int /*argc*/, char** /*argv*/)
     GPUPrinting gpuPrinting;
     gpuPrinting.loadStrings(slangProgram.program->getLayout());
 
+    float data[12] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+
+    auto tensorInfoOpt = tensor_reflection::ReflectTensorBuffer(
+        slangProgram.program.get(), "input");
+    if (!tensorInfoOpt) {
+        return EXIT_FAILURE;
+    }
+    tensor_buffer::TensorBuffer tensor(*tensorInfoOpt);
+    tensor.Initialize(device, sizeof(data));
+
+    auto printInfoOpt =
+        print_reflection::ReflectPrintBuffer(slangProgram.program.get());
+    if (!printInfoOpt) {
+        return EXIT_FAILURE;
+    }
+    print_buffer::PrintBuffer printBuf(*printInfoOpt);
+    size_t printBufferSize = 4 * 1024;
+    printBuf.Initialize(device, printBufferSize);
+    uint32_t zero = 0;
+    queue.WriteBuffer(printBuf.GetBuffer(), 0, &zero, sizeof(zero));
+
     std140::Encoder encoder;
     {
         auto shape = encoder.beginStruct();
@@ -71,43 +91,12 @@ int main(int /*argc*/, char** /*argv*/)
         }
         encoder.write<int32_t>(12);
     }
-    const std::vector<std::byte>& parameters = encoder.data();
-    LOG_WARN("Shape size: {}", parameters.size());
-
-    wgpu::BufferDescriptor buffer0Desc = {
-        .label = "Size parameters",
-        .usage = wgpu::BufferUsage::Uniform | wgpu::BufferUsage::CopySrc
-            | wgpu::BufferUsage::CopyDst,
-        .size = parameters.size(),
-        .mappedAtCreation = false,
-    };
-    wgpu::Buffer buffer0 = device.CreateBuffer(&buffer0Desc);
-    queue.WriteBuffer(buffer0, 0, parameters.data(), parameters.size());
-
-    Align<float, 4> data[12] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
-    wgpu::BufferDescriptor buffer1Desc = {
-        .label = "Buffer",
-        .usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc
-            | wgpu::BufferUsage::CopyDst,
-        .size = sizeof(data),
-        .mappedAtCreation = false,
-    };
-
-    wgpu::Buffer buffer1 = device.CreateBuffer(&buffer1Desc);
-    queue.WriteBuffer(buffer1, 0, data, sizeof(data));
-
-    size_t printBufferSize = 4 * 1024;
-
-    wgpu::BufferDescriptor printBufferDesc = {
-        .label = "Print Buffer",
-        .usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc
-            | wgpu::BufferUsage::CopyDst,
-        .size = printBufferSize,
-        .mappedAtCreation = false,
-    };
-    wgpu::Buffer printBuffer = device.CreateBuffer(&printBufferDesc);
-    uint32_t zero = 0;
-    queue.WriteBuffer(printBuffer, 0, &zero, sizeof(zero));
+    const std::vector<std::byte>& shape = encoder.data();
+    queue.WriteBuffer(tensor.GetShapeBuffer(),
+                      tensor.GetShapeOffset(),
+                      shape.data(),
+                      shape.size());
+    queue.WriteBuffer(tensor.GetDataBuffer(), 0, data, sizeof(data));
 
     wgpu::BufferDescriptor mapBufferDesc = {
         .label = "Map Buffer",
@@ -118,53 +107,23 @@ int main(int /*argc*/, char** /*argv*/)
 
     wgpu::Buffer mapBuffer = device.CreateBuffer(&mapBufferDesc);
 
-    wgpu::BindGroupEntry bindGroupEntries[3] = {
-        {
-            .binding = 0,
-            .buffer = buffer0,
-            .offset = 0,
-            .size = parameters.size(),
-        },
-        {.binding = 1, .buffer = buffer1, .offset = 0, .size = sizeof(data)},
-        {
-            .binding = 2,
-            .buffer = printBuffer,
-            .offset = 0,
-            .size = printBufferSize,
-        },
-    };
+    const wgpu::BindGroupLayoutEntry* tensorLayoutEntries =
+        tensor.GetBindGroupLayoutEntries();
+    const wgpu::BindGroupEntry* tensorEntries = tensor.GetBindGroupEntries();
+    const wgpu::BindGroupLayoutEntry* printLayoutEntry =
+        printBuf.GetBindGroupLayoutEntries();
+    const wgpu::BindGroupEntry* printEntry = printBuf.GetBindGroupEntries();
 
     wgpu::BindGroupLayoutEntry bindGroupLayoutEntries[3] = {
-        {
-            .binding = 0,
-            .visibility = wgpu::ShaderStage::Compute,
-            .buffer =
-                {
-                    .type = wgpu::BufferBindingType::Uniform,
-                    .hasDynamicOffset = false,
-                    .minBindingSize = 0,
-                },
-        },
-        {
-            .binding = 1,
-            .visibility = wgpu::ShaderStage::Compute,
-            .buffer =
-                {
-                    .type = wgpu::BufferBindingType::Storage,
-                    .hasDynamicOffset = false,
-                    .minBindingSize = 0,
-                },
-        },
-        {
-            .binding = 2,
-            .visibility = wgpu::ShaderStage::Compute,
-            .buffer =
-                {
-                    .type = wgpu::BufferBindingType::Storage,
-                    .hasDynamicOffset = false,
-                    .minBindingSize = 0,
-                },
-        },
+        tensorLayoutEntries[0],
+        tensorLayoutEntries[1],
+        *printLayoutEntry,
+    };
+
+    wgpu::BindGroupEntry bindGroupEntries[3] = {
+        tensorEntries[0],
+        tensorEntries[1],
+        *printEntry,
     };
 
     wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc = {
@@ -235,11 +194,11 @@ int main(int /*argc*/, char** /*argv*/)
 
     computePassEncoder.SetPipeline(computePipeline);
     computePassEncoder.SetBindGroup(0, bindGroup);
-    computePassEncoder.DispatchWorkgroups(3, 4, 1);
+    computePassEncoder.DispatchWorkgroups(1, 4, 1);
     computePassEncoder.End();
 
     commandEncoder.CopyBufferToBuffer(
-        printBuffer, 0, mapBuffer, 0, printBufferSize);
+        printBuf.GetBuffer(), 0, mapBuffer, 0, printBufferSize);
 
     wgpu::CommandBufferDescriptor commandBufferDesc = {
         .label = "Command Buffer",
