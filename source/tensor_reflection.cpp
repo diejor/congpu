@@ -8,7 +8,7 @@ namespace tensor_reflection
 namespace
 {
 // Helper to locate a field by name inside a struct type layout
-slang::VariableLayoutReflection* findField(
+slang::VariableLayoutReflection* FindField(
     slang::TypeLayoutReflection* typeLayout, const std::string& name)
 {
     if (!typeLayout
@@ -28,7 +28,7 @@ slang::VariableLayoutReflection* findField(
 
 }    // namespace
 
-std::optional<TensorBufferReflection> reflectTensorBuffer(
+std::optional<TensorBufferReflection> ReflectTensorBuffer(
     slang::IComponentType* program, const std::string& paramName)
 {
     if (!program) {
@@ -80,16 +80,16 @@ std::optional<TensorBufferReflection> reflectTensorBuffer(
     }
 
     slang::VariableLayoutReflection* tensorVar =
-        findField(typeLayout, paramName);
+        FindField(typeLayout, paramName);
     if (!tensorVar) {
         return std::nullopt;
     }
 
     // Access fields of the tensor buffer
     slang::TypeLayoutReflection* tensorType = tensorVar->getTypeLayout();
-    slang::VariableLayoutReflection* dataField = findField(tensorType, "data");
+    slang::VariableLayoutReflection* dataField = FindField(tensorType, "data");
     slang::VariableLayoutReflection* shapeField =
-        findField(tensorType, "shape");
+        FindField(tensorType, "shape");
     if (!dataField || !shapeField) {
         return std::nullopt;
     }

@@ -25,7 +25,7 @@ struct TensorBufferReflection
  * @return reflection information if found
  */
 [[nodiscard]]
-std::optional<TensorBufferReflection> reflectTensorBuffer(
+std::optional<TensorBufferReflection> ReflectTensorBuffer(
     slang::IComponentType* program, const std::string& paramName);
 
 }    // namespace tensor_reflection

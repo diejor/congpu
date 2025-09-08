@@ -27,12 +27,11 @@ void computeMain(uint3 tid: SV_DispatchThreadID, uint3 ltid : SV_GroupThreadID)
 }
 )";
 
-    auto shadersDir = std::string(SHADERS_DIR);
-    slang_compiler::Compiler compiler({shadersDir});
+    slang_compiler::Compiler compiler({SHADERS_DIR});
     auto prog =
-        compiler.CompileFromSource(shader, "tensor-buffer", "computeMain", {shadersDir});
+        compiler.CompileFromSource(shader, "tensor-buffer", "computeMain");
     auto infoOpt =
-        tensor_reflection::reflectTensorBuffer(prog.program.get(), "input");
+        tensor_reflection::ReflectTensorBuffer(prog.program.get(), "input");
     REQUIRE(infoOpt.has_value());
     auto info = *infoOpt;
     CHECK(info.dataBinding == 1);

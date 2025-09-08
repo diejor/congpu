@@ -15,6 +15,7 @@ add_executable(congpu_test
     source/lib_test.cpp
     source/slang_test.cpp
     source/tensor_reflection_test.cpp
+    source/tensor_buffer_test.cpp
 )
 
 copy_runtime_libs(congpu_test)
