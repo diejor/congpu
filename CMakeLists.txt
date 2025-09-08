@@ -47,6 +47,8 @@ add_library(
     source/slang_compiler.cpp
     source/tensor_reflection.cpp
     source/tensor_buffer.cpp
+    source/print_reflection.cpp
+    source/print_buffer.cpp
     source/shaders/tools/gpu-printing.cpp
 )
 
