@@ -1,0 +1,6 @@
+[submodule "conanfiles/slang"]
+	path = conanfiles/slang
+	url = https://github.com/diejor/conan-slang/
+[submodule "conanfiles/dawn"]
+	path = conanfiles/dawn
+	url = https://github.com/diejor/conan-dawn/
