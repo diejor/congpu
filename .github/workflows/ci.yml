@@ -23,6 +23,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - uses: actions/setup-python@v5
         with:
@@ -47,6 +49,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: System dependencies
         run: |
@@ -105,6 +109,8 @@ jobs:
       CXX: clang++-18
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: System dependencies
         run: |
@@ -158,6 +164,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Linux system dependencies
         if: runner.os == 'Linux'
@@ -218,6 +226,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - uses: actions/setup-python@v5
         with:

@@ -11,6 +11,9 @@ mv "$profile" "${profile}.bak"
 sed 's/^\(compiler\.cppstd=\).\{1,\}$/\1'"$std/" "${profile}.bak" > "$profile"
 rm "${profile}.bak"
 
+# Ensure bundled Conan recipes are available
+git submodule update --init conanfiles/dawn conanfiles/slang
+
 if [ -f conan_cache_save.tgz ]; then
   conan cache restore conan_cache_save.tgz
 fi
@@ -21,17 +24,14 @@ conan remove '*' --lru=1M -c
 ensure_recipe() {
   local name="$1"
   local version="$2"
-  local repo="https://github.com/diejor/conan-${name}.git"
   local ref="${name}/${version}"
   if ! conan download "${ref}" --recipe -r=dpconan; then
-    if git ls-remote "${repo}" &>/dev/null; then
-      echo "Falling back to local recipe for ${ref}"
-      tmpdir=$(mktemp -d)
-      git clone --depth=1 "${repo}" "${tmpdir}"
-      conan export "${tmpdir}"
-      rm -rf "${tmpdir}"
+    local submodule="conanfiles/${name}"
+    if [ -f "${submodule}/conanfile.py" ]; then
+      echo "Falling back to submodule recipe for ${ref}"
+      conan export "${submodule}"
     else
-      echo "No local recipe for ${ref}, skipping"
+      echo "No submodule recipe for ${ref}, skipping"
     fi
   fi
 }

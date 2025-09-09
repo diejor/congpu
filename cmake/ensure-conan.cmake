@@ -8,6 +8,21 @@ else()
   set(_conan_toolchain "${CMAKE_SOURCE_DIR}/conan/conan_toolchain.cmake")
 endif()
 
+find_program(CONAN_COMMAND conan REQUIRED)
+
+# Ensure Conan recipes from bundled submodules are exported
+execute_process(
+  COMMAND git submodule update --init conanfiles/dawn conanfiles/slang
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
+foreach(_recipe dawn slang)
+  set(_recipe_path "${CMAKE_SOURCE_DIR}/conanfiles/${_recipe}")
+  if(EXISTS "${_recipe_path}/conanfile.py")
+    execute_process(COMMAND ${CONAN_COMMAND} export ${_recipe_path})
+  endif()
+endforeach()
+
 # If the toolchain file does not exist, invoke Conan to generate it.
 if(NOT EXISTS "${_conan_toolchain}")
   message(STATUS "Conan toolchain not found, running 'conan install'")
@@ -36,3 +51,4 @@ endif()
 unset(_conan_toolchain)
 unset(_conan_build_type)
 unset(_conan_result)
+unset(CONAN_COMMAND)

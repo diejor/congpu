@@ -2,7 +2,14 @@
 
 ## Dependencies
 
-For a list of dependencies, please refer to [conanfile.py](conanfile.py).
+For a list of dependencies, please refer to [conanfile.py](conanfile.py).  The
+repository also vendors Conan recipes for some third-party libraries as git
+submodules under the `conanfiles/` directory. Make sure to fetch them before
+configuring the build:
+
+```sh
+git submodule update --init --recursive
+```
 
 ## Build
 
