@@ -174,9 +174,6 @@ jobs:
           sudo apt-get remove --purge -y needrestart || true
           sudo apt-get install --no-install-recommends -y \
             libvulkan1 mesa-vulkan-drivers vulkan-tools \
-            libx11-dev libxrandr-dev libxi-dev libxrender-dev \
-            libxkbcommon-dev xorg-dev libx11-xcb-dev \
-            libxcb1-dev libxcb-keysyms1-dev \
             clang-tidy-18 cppcheck
 
       - uses: actions/setup-python@v5

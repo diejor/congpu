@@ -10,7 +10,7 @@ class Recipe(ConanFile):
 
     def requirements(self):
         self.requires("fmt/11.0.2")
-        self.requires("dawn/7390")
+        self.requires("dawn/7390", options={"force_glfw": False, "force_x11": False})
         self.requires("slang/2025.13.1")
         self.requires("tracy/0.11.1")
 
