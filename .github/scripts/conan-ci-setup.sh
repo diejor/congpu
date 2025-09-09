@@ -56,7 +56,6 @@ if [ -f conan_cache_save.tgz ]; then
   conan cache restore conan_cache_save.tgz
 fi
 
-conan remote add dpconan https://conan.diejor.tech
 conan remove '*' --lru=1M -c
 
 ensure_recipe() {
