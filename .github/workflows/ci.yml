@@ -36,7 +36,6 @@ jobs:
           sudo apt-get install --no-install-recommends -y \
             clang-format-18
           pip3 install --user codespell
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Lint
         run: cmake -D FORMAT_COMMAND=clang-format-18 -P cmake/lint.cmake

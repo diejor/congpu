@@ -6,7 +6,11 @@ macro(default name)
   endif()
 endmacro()
 
-default(SPELL_COMMAND codespell)
+find_program(_codespell codespell)
+if(NOT _codespell AND NOT DEFINED SPELL_COMMAND)
+  message(FATAL_ERROR "codespell executable not found. Install codespell or set SPELL_COMMAND to its path.")
+endif()
+default(SPELL_COMMAND "${_codespell}")
 default(FIX NO)
 
 set(flag "")
